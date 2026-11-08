@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Chand School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1d2b4f;
+      --ink-deep: #14203d;
+      --chalk: #f7f6f2;
+      --bus: #f2b705;
+      --slate: #5b6478;
+      --line: #d9dbe2;
+      --error: #b3261e;
+      --error-bg: #fdecea;
+      --ok: #1b6e3c;
+      --ok-bg: #e7f5ec;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Mukta", system-ui, sans-serif;
+      font-size: 17px;
+      color: var(--ink-deep);
+      background: var(--chalk);
+      display: grid;
+      grid-template-columns: minmax(300px, 5fr) minmax(340px, 6fr);
+    }
+
+    /* Left: school identity */
+    .brand {
+      background: var(--ink);
+      color: #fff;
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .brand::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 14px;
+      background: repeating-linear-gradient(90deg, var(--bus) 0 36px, var(--ink) 36px 52px);
+    }
+    .brand h1 {
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-weight: 700;
+      font-size: clamp(2.6rem, 5vw, 4.2rem);
+      line-height: 1.02;
+      margin: 0 0 18px;
+      letter-spacing: -0.02em;
+    }
+    .brand p { margin: 0; max-width: 30ch; color: #c9d0e4; line-height: 1.5; }
+    .brand .crest {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--bus); color: var(--ink-deep);
+      display: grid; place-items: center;
+      font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.5rem;
+    }
+    .brand .foot { font-size: 0.9rem; color: #9aa5c4; margin-bottom: 14px; }
+
+    /* Right: form */
+    main { display: grid; place-items: center; padding: 32px 24px; }
+    .panel { width: 100%; max-width: 400px; }
+    .panel h2 {
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: 1.9rem; margin: 0 0 6px; letter-spacing: -0.01em;
+    }
+    .panel .sub { margin: 0 0 28px; color: var(--slate); }
+
+    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    .field { margin-bottom: 18px; }
+    input[type="email"], input[type="password"], input[type="text"] {
+      width: 100%; padding: 13px 14px; font: inherit;
+      border: 1.5px solid var(--line); border-radius: 8px;
+      background: #fff; color: inherit;
+    }
+    input:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 3px solid var(--bus); outline-offset: 2px;
+    }
+    input:focus { border-color: var(--ink); }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 76px; }
+    .pw-toggle {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      background: none; border: 0; padding: 8px 10px; font: inherit; font-weight: 700;
+      color: var(--ink); cursor: pointer; border-radius: 6px;
+    }
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; gap: 12px; flex-wrap: wrap; }
+    .check { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 0; cursor: pointer; }
+    .check input { width: 18px; height: 18px; accent-color: var(--ink); }
+    .link-btn {
+      background: none; border: 0; padding: 4px 0; font: inherit; color: var(--ink);
+      text-decoration: underline; cursor: pointer;
+    }
+    .btn {
+      width: 100%; padding: 14px; font: inherit; font-weight: 700; font-size: 1.05rem;
+      background: var(--ink); color: #fff; border: 0; border-radius: 8px; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn:hover { background: var(--ink-deep); }
+    .btn:disabled { opacity: .6; cursor: progress; }
+
+    .msg { padding: 12px 14px; border-radius: 8px; margin-bottom: 18px; font-size: 0.97rem; line-height: 1.4; }
+    .msg[hidden] { display: none; }
+    .msg.error { background: var(--error-bg); color: var(--error); }
+    .msg.ok { background: var(--ok-bg); color: var(--ok); }
+
+    .help { margin-top: 26px; color: var(--slate); font-size: 0.95rem; }
+
+    @media (max-width: 760px) {
+      body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .brand { padding: 28px 24px 34px; gap: 24px; }
+      .brand h1 { font-size: 2.2rem; margin-bottom: 8px; }
+      .brand .foot { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+
+  <aside class="brand">
+    <div>
+      <div class="crest" aria-hidden="true">C</div>
+    </div>
+    <div>
+      <h1>Chand School</h1>
+      <p>Students, fees, attendance and results in one place.</p>
+    </div>
+    <div class="foot">School Management System</div>
+  </aside>
+
+  <main>
+    <div class="panel">
+      <h2 id="title">Sign in</h2>
+      <p class="sub" id="subtitle">Use the email and password your school gave you.</p>
+
+      <div id="message" class="msg" role="alert" hidden></div>
+
+      <!-- Sign in form -->
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="username" placeholder="name@example.com" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input id="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in</label>
+          <button type="button" class="link-btn" id="forgotBtn">Forgot password?</button>
+        </div>
+        <button class="btn" id="loginBtn" type="submit">Sign in</button>
+      </form>
+
+      <!-- Reset password form -->
+      <form id="resetForm" novalidate hidden>
+        <div class="field">
+          <label for="resetEmail">Email</label>
+          <input id="resetEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
+        </div>
+        <button class="btn" id="resetBtn" type="submit">Send reset link</button>
+        <p class="help"><button type="button" class="link-btn" id="backBtn">Back to sign in</button></p>
+      </form>
+
+      <p class="help" id="helpText">No account yet? Ask the school office to create one for you.<br>Parent? <a href="parent-dashboard.html" style="color: var(--ink); font-weight: 700;">Check your child's fees and attendance</a></p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import {
+      signInWithEmailAndPassword, onAuthStateChanged, signOut,
+      sendPasswordResetEmail, setPersistence,
+      browserLocalPersistence, browserSessionPersistence
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    // Role -> page to open after login. Change file names here when you build these pages.
+    const ROLE_PAGES = {
+      admin:   "admin-dashboard.html",
+      coordinator: "attendance-fees.html",
+      teacher: "teacher-dashboard.html",
+      student: "student-dashboard.html",
+      parent:  "student-dashboard.html"
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const loginForm = $("loginForm"), resetForm = $("resetForm");
+    const msg = $("message");
+    let busy = false; // true while a manual sign-in is being checked
+
+    function show(text, type = "error") {
+      msg.textContent = text;
+      msg.className = "msg " + type;
+      msg.hidden = false;
+    }
+    function clearMsg() { msg.hidden = true; }
+
+    function friendlyError(err) {
+      switch (err.code) {
+        case "auth/invalid-email": return "That email address doesn't look right. Check it and try again.";
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+        case "auth/user-not-found": return "Email or password is incorrect.";
+        case "auth/user-disabled": return "This account has been turned off. Please contact the school office.";
+        case "auth/too-many-requests": return "Too many attempts. Wait a few minutes, or reset your password.";
+        case "auth/network-request-failed": return "No internet connection. Check your network and try again.";
+        default: return "Something went wrong. Please try again.";
+      }
+    }
+
+    // Look up the user's role in Firestore (collection "users", document id = user's uid)
+    async function goToDashboard(user) {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists()) {
+        await signOut(auth);
+        throw { custom: "Your account isn't set up yet. Please contact the school office." };
+      }
+      const data = snap.data();
+      if (data.active === false) {
+        await signOut(auth);
+        throw { custom: "This account is not active. Please contact the school office." };
+      }
+      const page = ROLE_PAGES[data.role];
+      if (!page) {
+        await signOut(auth);
+        throw { custom: "Your account has no role assigned. Please contact the school office." };
+      }
+      window.location.replace(page);
+    }
+
+    // Already signed in? Skip the login page.
+    onAuthStateChanged(auth, async (user) => {
+      if (!user || busy) return;
+      try { await goToDashboard(user); }
+      catch (e) { if (e.custom) show(e.custom); }
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMsg();
+      const email = $("email").value.trim();
+      const password = $("password").value;
+      if (!email || !password) { show("Enter your email and password."); return; }
+
+      busy = true;
+      $("loginBtn").disabled = true;
+      $("loginBtn").textContent = "Signing in…";
+      try {
+        await setPersistence(auth, $("remember").checked ? browserLocalPersistence : browserSessionPersistence);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await goToDashboard(cred.user);
+      } catch (err) {
+        show(err.custom || friendlyError(err));
+        $("loginBtn").disabled = false;
+        $("loginBtn").textContent = "Sign in";
+        busy = false;
+      }
+    });
+
+    resetForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMsg();
+      const email = $("resetEmail").value.trim();
+      if (!email) { show("Enter your email address."); return; }
+      $("resetBtn").disabled = true;
+      try {
+        await sendPasswordResetEmail(auth, email);
+        show("If this email has an account, a reset link is on its way. Check your inbox and spam folder.", "ok");
+      } catch (err) {
+        show(friendlyError(err));
+      }
+      $("resetBtn").disabled = false;
+    });
+
+    function switchView(toReset) {
+      clearMsg();
+      loginForm.hidden = toReset;
+      resetForm.hidden = !toReset;
+      $("helpText").hidden = toReset;
+      $("title").textContent = toReset ? "Reset password" : "Sign in";
+      $("subtitle").textContent = toReset
+        ? "Enter your email and we'll send you a link to choose a new password."
+        : "Use the email and password your school gave you.";
+      if (toReset) $("resetEmail").value = $("email").value;
+      (toReset ? $("resetEmail") : $("email")).focus();
+    }
+    $("forgotBtn").addEventListener("click", () => switchView(true));
+    $("backBtn").addEventListener("click", () => switchView(false));
+
+    $("pwToggle").addEventListener("click", () => {
+      const pw = $("password");
+      const hidden = pw.type === "password";
+      pw.type = hidden ? "text" : "password";
+      $("pwToggle").textContent = hidden ? "Hide" : "Show";
+      $("pwToggle").setAttribute("aria-label", hidden ? "Hide password" : "Show password");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parent Corner · Chand School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1d2b4f;
+      --ink-deep: #14203d;
+      --chalk: #f7f6f2;
+      --bus: #f2b705;
+      --slate: #5b6478;
+      --line: #d9dbe2;
+      --error: #b3261e;
+      --error-bg: #fdecea;
+      --ok: #1b6e3c;
+      --ok-bg: #e7f5ec;
+      --warn-bg: #fff6d6;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: "Mukta", system-ui, sans-serif;
+      font-size: 17px;
+      color: var(--ink-deep);
+      background: var(--chalk);
+      min-height: 100vh;
+    }
+    h1, h2, h3 { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.01em; margin: 0; }
+
+    header {
+      background: var(--ink); color: #fff; padding: 22px 20px 26px; position: relative;
+    }
+    header::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px;
+      background: repeating-linear-gradient(90deg, var(--bus) 0 28px, var(--ink) 28px 40px);
+    }
+    .head-in { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+    .crest { width: 44px; height: 44px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.3rem; flex: none; }
+    header h1 { font-size: 1.5rem; }
+    header p { margin: 2px 0 0; color: #c9d0e4; font-size: .95rem; }
+
+    main { max-width: 720px; margin: 0 auto; padding: 26px 18px 60px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 22px; margin-bottom: 22px; }
+    .card h2 { font-size: 1.25rem; margin-bottom: 6px; }
+    .sub { color: var(--slate); margin: 0 0 16px; font-size: .97rem; }
+
+    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    .row { display: flex; gap: 10px; }
+    input {
+      flex: 1; min-width: 0; padding: 13px 14px; font: inherit; color: inherit;
+      border: 1.5px solid var(--line); border-radius: 8px; background: #fff;
+    }
+    input:focus { border-color: var(--ink); }
+    input:focus-visible, button:focus-visible { outline: 3px solid var(--bus); outline-offset: 2px; }
+    .btn { background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 13px 22px; font: inherit; font-weight: 700; cursor: pointer; }
+    .btn:hover { background: var(--ink-deep); }
+    .btn:disabled { opacity: .6; cursor: progress; }
+    .hint { color: var(--slate); font-size: .9rem; margin: 10px 0 0; }
+    .msg { padding: 11px 14px; border-radius: 8px; margin-top: 14px; font-size: .97rem; line-height: 1.4; }
+    .msg[hidden] { display: none; }
+    .msg.error { background: var(--error-bg); color: var(--error); }
+    .msg.info { background: #eaeefb; color: var(--ink); }
+
+    /* Child card */
+    .child h2 { font-size: 1.45rem; margin-bottom: 2px; }
+    .child .meta { color: var(--slate); margin: 0 0 18px; }
+    .block { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 16px; }
+    .block h3 { font-size: 1.05rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .badge { display: inline-block; padding: 4px 14px; border-radius: 99px; font-size: .95rem; font-weight: 700; font-family: "Mukta", sans-serif; }
+    .badge.unpaid { background: var(--error-bg); color: var(--error); }
+    .badge.partial { background: var(--warn-bg); color: #6b5200; }
+    .badge.paid { background: var(--ok-bg); color: var(--ok); }
+    dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; }
+    dt { color: var(--slate); }
+    dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+    dl .total { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 700; color: var(--ink-deep); }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .stats div { background: var(--chalk); border-radius: 10px; padding: 10px 12px; text-align: center; }
+    .stats strong { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.5rem; }
+    .stats span { color: var(--slate); font-size: .88rem; }
+    .bar { height: 10px; background: #e6e8ef; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .bar > div { height: 100%; background: var(--ok); }
+    .note { color: var(--slate); font-size: .93rem; margin: 0; }
+
+    /* Notices */
+    .notice { border-top: 1px solid var(--line); padding: 14px 0; }
+    .notice:first-of-type { border-top: 0; padding-top: 4px; }
+    .notice h3 { font-size: 1.05rem; margin-bottom: 2px; }
+    .notice time { color: var(--slate); font-size: .88rem; }
+    .notice p { margin: 8px 0 0; white-space: pre-wrap; line-height: 1.5; }
+    .empty { color: var(--slate); margin: 0; }
+
+    @media (max-width: 480px) {
+      .row { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="head-in">
+      <div class="crest" aria-hidden="true">C</div>
+      <div>
+        <h1>Chand School</h1>
+        <p>Parent corner</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <form class="card" id="lookupForm" novalidate>
+      <h2>Check your child</h2>
+      <p class="sub">See fee status, attendance and school notices.</p>
+      <label for="phone">Parent WhatsApp / phone number</label>
+      <div class="row">
+        <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="98765 43210" required>
+        <button class="btn" id="goBtn" type="submit">View</button>
+      </div>
+      <p class="hint">Use the number you gave the school. If it is not an Indian (+91) number, type it with the country code.</p>
+      <div id="lookupMsg" class="msg" role="alert" hidden></div>
+    </form>
+
+    <div id="results"></div>
+
+    <section class="card" aria-labelledby="noticeTitle">
+      <h2 id="noticeTitle">School notices</h2>
+      <div id="notices"><p class="empty">Loading…</p></div>
+    </section>
+  </main>
+
+  <script type="module" src="parent-dashboard.js"></script>
+</body>
+</html>

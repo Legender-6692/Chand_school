@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Chand School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1d2b4f;
+      --ink-deep: #14203d;
+      --chalk: #f7f6f2;
+      --bus: #f2b705;
+      --slate: #5b6478;
+      --line: #d9dbe2;
+      --error: #b3261e;
+      --error-bg: #fdecea;
+      --ok: #1b6e3c;
+      --ok-bg: #e7f5ec;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Mukta", system-ui, sans-serif;
+      font-size: 16.5px;
+      color: var(--ink-deep);
+      background: var(--chalk);
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+    h1, h2, h3 { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.01em; margin: 0; }
+
+    /* Sidebar */
+    .side {
+      background: var(--ink); color: #fff; padding: 28px 20px;
+      display: flex; flex-direction: column; gap: 28px;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .side .school { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .crest { width: 38px; height: 38px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-weight: 700; }
+    nav { display: flex; flex-direction: column; gap: 6px; }
+    nav button {
+      text-align: left; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500;
+      padding: 11px 14px; border-radius: 8px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    nav button:hover, nav a:hover { background: rgba(255,255,255,.08); }
+    nav a { color: #c9d0e4; font-weight: 500; padding: 11px 14px; border-radius: 8px; text-decoration: none; display: block; }
+    nav button[aria-current="page"] { background: var(--bus); color: var(--ink-deep); font-weight: 700; }
+    nav .count { font-size: .85rem; opacity: .85; }
+    .who { margin-top: auto; font-size: .93rem; color: #c9d0e4; }
+    .who strong { display: block; color: #fff; margin-bottom: 8px; word-break: break-word; }
+    .who button { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .who button:hover { border-color: #fff; }
+
+    /* Main */
+    main { padding: 34px 40px 60px; max-width: 1100px; width: 100%; }
+    main h1 { font-size: 2rem; margin-bottom: 4px; }
+    .lead { color: var(--slate); margin: 0 0 26px; }
+    section[hidden] { display: none; }
+
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-bottom: 28px; }
+    .card h2 { font-size: 1.25rem; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; }
+    .grid .wide { grid-column: 1 / -1; }
+    label { display: block; font-weight: 700; margin-bottom: 5px; font-size: .97rem; }
+    .hint { font-weight: 400; color: var(--slate); font-size: .88rem; }
+    input, select {
+      width: 100%; padding: 11px 12px; font: inherit; color: inherit;
+      border: 1.5px solid var(--line); border-radius: 8px; background: #fff;
+    }
+    textarea {
+      width: 100%; padding: 11px 12px; font: inherit; color: inherit; min-height: 110px; resize: vertical;
+      border: 1.5px solid var(--line); border-radius: 8px; background: #fff;
+    }
+    textarea:focus-visible { outline: 3px solid var(--bus); outline-offset: 2px; }
+    input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+    .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); }
+    .btn.alt:hover { background: #eef0f6; }
+    .btn.small { padding: 6px 12px; font-size: .9rem; }
+    input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--bus); outline-offset: 2px; }
+    .phone { display: grid; grid-template-columns: 76px 1fr; gap: 8px; }
+    .actions { margin-top: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .btn { background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 12px 24px; font: inherit; font-weight: 700; cursor: pointer; }
+    .btn:hover { background: var(--ink-deep); }
+    .btn:disabled { opacity: .6; cursor: progress; }
+    .msg { padding: 10px 14px; border-radius: 8px; font-size: .96rem; line-height: 1.4; }
+    .msg[hidden] { display: none; }
+    .msg.error { background: var(--error-bg); color: var(--error); }
+    .msg.ok { background: var(--ok-bg); color: var(--ok); }
+
+    /* List */
+    .list-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+    .list-head h2 { margin: 0; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filters input { width: 220px; }
+    .filters select { width: 150px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .97rem; }
+    th { text-align: left; font-weight: 700; color: var(--slate); padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+    td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    tbody tr:hover { background: #faf9f5; }
+    .empty { color: var(--slate); padding: 22px 4px 6px; }
+
+    @media (max-width: 860px) {
+      body { grid-template-columns: 1fr; }
+      .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 16px; gap: 14px; }
+      .side .school { font-size: 1.2rem; }
+      nav { flex-direction: row; order: 3; width: 100%; }
+      nav button { flex: 1; justify-content: center; gap: 8px; }
+      nav a { flex: 1; text-align: center; }
+      .who { margin: 0 0 0 auto; display: flex; align-items: center; gap: 10px; }
+      .who strong { display: none; }
+      main { padding: 22px 16px 50px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+
+  <aside class="side">
+    <div class="school"><span class="crest" aria-hidden="true">C</span> Chand School</div>
+    <nav aria-label="Sections">
+      <button type="button" data-view="students" aria-current="page">Students <span class="count" id="studentCount">0</span></button>
+      <button type="button" data-view="teachers">Teachers <span class="count" id="teacherCount">0</span></button>
+      <button type="button" data-view="notices">Notices <span class="count" id="noticeCount">0</span></button>
+      <a href="attendance-fees.html">Attendance &amp; Fees</a>
+    </nav>
+    <div class="who">
+      <strong id="adminName">Admin</strong>
+      <button type="button" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- STUDENTS -->
+    <section id="view-students">
+      <h1>Students</h1>
+      <p class="lead">Add a new student and see everyone enrolled.</p>
+
+      <form class="card" id="studentForm" novalidate>
+        <h2>Add new student</h2>
+        <div class="grid">
+          <div class="wide">
+            <label for="s_name">Student name</label>
+            <input id="s_name" type="text" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="s_father">Father's name</label>
+            <input id="s_father" type="text" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="s_mother">Mother's name</label>
+            <input id="s_mother" type="text" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="s_class">Class</label>
+            <select id="s_class" required></select>
+          </div>
+          <div>
+            <label for="s_roll">Roll number</label>
+            <input id="s_roll" type="text" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="s_phone">Parent WhatsApp number</label>
+            <div class="phone">
+              <input id="s_code" type="text" value="+91" inputmode="tel" aria-label="Country code">
+              <input id="s_phone" type="tel" inputmode="numeric" placeholder="98765 43210" autocomplete="off" required>
+            </div>
+          </div>
+          <div>
+            <label for="s_fee">Monthly fee amount</label>
+            <input id="s_fee" type="number" min="0" step="1" inputmode="numeric" required>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="studentBtn" type="submit">Save student</button>
+          <div id="studentMsg" class="msg" role="status" hidden></div>
+        </div>
+      </form>
+
+      <div class="card">
+        <div class="list-head">
+          <h2>All students</h2>
+          <div class="filters">
+            <input id="s_search" type="search" placeholder="Search name or roll no" aria-label="Search students">
+            <select id="s_filter" aria-label="Filter by class"></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Class</th><th>Roll</th><th>Student</th><th>Father</th><th>Mother</th><th>WhatsApp</th><th>Monthly fee</th></tr></thead>
+            <tbody id="studentRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="studentEmpty" hidden></p>
+      </div>
+    </section>
+
+    <!-- TEACHERS -->
+    <section id="view-teachers" hidden>
+      <h1>Teachers</h1>
+      <p class="lead">Add a teacher. A login is created so they can sign in with their email.</p>
+
+      <form class="card" id="teacherForm" novalidate>
+        <h2>Add new teacher</h2>
+        <div class="grid">
+          <div class="wide">
+            <label for="t_name">Teacher name</label>
+            <input id="t_name" type="text" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="t_subject">Subject</label>
+            <input id="t_subject" type="text" placeholder="e.g. Mathematics" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="t_qual">Qualification</label>
+            <input id="t_qual" type="text" placeholder="e.g. B.Ed" autocomplete="off">
+          </div>
+          <div>
+            <label for="t_phone">Phone number</label>
+            <div class="phone">
+              <input id="t_code" type="text" value="+91" inputmode="tel" aria-label="Country code">
+              <input id="t_phone" type="tel" inputmode="numeric" autocomplete="off" required>
+            </div>
+          </div>
+          <div>
+            <label for="t_email">Login email</label>
+            <input id="t_email" type="email" autocomplete="off" required>
+          </div>
+          <div class="wide">
+            <label for="t_pass">Login password <span class="hint">(at least 6 characters; share it with the teacher)</span></label>
+            <input id="t_pass" type="text" autocomplete="off" required>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="teacherBtn" type="submit">Save teacher</button>
+          <div id="teacherMsg" class="msg" role="status" hidden></div>
+        </div>
+      </form>
+
+      <div class="card">
+        <div class="list-head"><h2>All teachers</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Subject</th><th>Qualification</th><th>Phone</th><th>Email</th></tr></thead>
+            <tbody id="teacherRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="teacherEmpty" hidden></p>
+      </div>
+    </section>
+
+    <!-- NOTICES -->
+    <section id="view-notices" hidden>
+      <h1>Notices</h1>
+      <p class="lead">Notices you post here appear on the parent page.</p>
+
+      <form class="card" id="noticeForm" novalidate>
+        <h2>Post a notice</h2>
+        <div class="grid">
+          <div class="wide">
+            <label for="n_title">Title</label>
+            <input id="n_title" type="text" autocomplete="off" required>
+          </div>
+          <div class="wide">
+            <label for="n_body">Message</label>
+            <textarea id="n_body" required></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="noticeBtn" type="submit">Post notice</button>
+          <div id="noticeMsg" class="msg" role="status" hidden></div>
+        </div>
+      </form>
+
+      <div class="card">
+        <div class="list-head"><h2>Posted notices</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Title</th><th>Message</th><th></th></tr></thead>
+            <tbody id="noticeRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="noticeEmpty" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
