@@ -132,10 +132,18 @@ async function saveStudent(e) {
     // Same roll number must not repeat inside one class
     const dup = await getDocs(query(
       collection(db, "students"),
-      where("class", "==", cls), where("rollNo", "==", rollNo), limit(1)
+      where("class", "==", cls), where("rollNo", "==", rollNo), limit(2)
     ));
-    if (!dup.empty) {
+    const clash = dup.docs.some((d) => !editingStudent || d.id !== editingStudent.id);
+    if (clash) {
       showMsg(msg, `Roll number ${rollNo} already exists in ${cls}.`);
+      return;
+    }
+
+    if (editingStudent) {
+      await updateStudentRecord(editingStudent, { name, fatherName, motherName, cls, rollNo, parentPhone, monthlyFee });
+      exitStudentEdit();
+      showMsg(msg, `${name} updated.`, "ok");
       return;
     }
 
@@ -164,7 +172,7 @@ async function saveStudent(e) {
       : "Could not save. Check your internet and try again.");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save student";
+    btn.textContent = editingStudent ? "Save changes" : "Save student";
   }
 }
 
@@ -199,6 +207,7 @@ function renderStudents() {
     [s.class, s.rollNo, s.name, s.fatherName, s.motherName,
      "+" + s.parentPhone, Number(s.monthlyFee).toLocaleString()]
       .forEach((v) => tr.appendChild(cell(v)));
+    tr.appendChild(actionsCell(() => startEditStudent(s), () => deleteStudent(s)));
     body.appendChild(tr);
   });
 
@@ -288,6 +297,7 @@ function listenTeachers() {
       const tr = document.createElement("tr");
       [t.name, t.subject, t.qualification || "-", "+" + t.phone, t.email]
         .forEach((v) => tr.appendChild(cell(v)));
+      tr.appendChild(actionsCell(() => startEditTeacher(t), () => deleteTeacher(t)));
       body.appendChild(tr);
     });
 
@@ -361,4 +371,72 @@ function listenNotices() {
     $("noticeEmpty").textContent = "Could not load notices. Check the Firestore rules.";
     $("noticeEmpty").hidden = false;
   });
+}
+
+/* ---------- Delete student / teacher ---------- */
+function deleteCell(onClick) {
+  const td = document.createElement("td");
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn alt small";
+  btn.textContent = "Delete";
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try { await onClick(); } finally { btn.disabled = false; }
+  });
+  td.appendChild(btn);
+  return td;
+}
+
+// Removes the student, all their fee records and attendance totals,
+// and unlinks them from the parent's phone number.
+// (Payment history in "feePayments" is kept as an accounts record.)
+async function deleteStudent(s) {
+  if (!confirm(`Delete ${s.name} (${s.class}, Roll ${s.rollNo})?\n\nTheir fee records and attendance totals will also be deleted. This cannot be undone.`)) return;
+  try {
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "students", s.id));
+
+    const [fees, sums] = await Promise.all([
+      getDocs(query(collection(db, "fees"), where("studentId", "==", s.id))),
+      getDocs(query(collection(db, "attendanceSummary"), where("studentId", "==", s.id)))
+    ]);
+    fees.docs.forEach((d) => batch.delete(d.ref));
+    sums.docs.forEach((d) => batch.delete(d.ref));
+
+    // Remove this child from the parent's phone link
+    if (s.parentPhone) {
+      const idxRef = doc(db, "parentIndex", s.parentPhone);
+      const idx = await getDoc(idxRef);
+      if (idx.exists()) {
+        const rest = (idx.data().children || []).filter((c) => c.id !== s.id);
+        if (rest.length) batch.update(idxRef, { children: rest });
+        else batch.delete(idxRef);
+      }
+    }
+    await batch.commit();
+  } catch (err) {
+    console.error(err);
+    alert(err.code === "permission-denied"
+      ? "Not allowed. Check the Firestore rules (see firestore.rules)."
+      : "Could not delete. Check your internet and try again.");
+  }
+}
+
+// Removes the teacher's record and their access to the app.
+// The sign-in account itself stays in Firebase Authentication (see note on screen).
+async function deleteTeacher(t) {
+  if (!confirm(`Delete ${t.name}?\n\nThey will no longer be able to use the app. This cannot be undone.`)) return;
+  try {
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "teachers", t.id));
+    batch.delete(doc(db, "users", t.id));
+    await batch.commit();
+    alert(`${t.name} removed.\n\nIf you want to add this email again later, first delete it in Firebase Console > Authentication > Users.`);
+  } catch (err) {
+    console.error(err);
+    alert(err.code === "permission-denied"
+      ? "Not allowed. Check the Firestore rules (see firestore.rules)."
+      : "Could not delete. Check your internet and try again.");
+  }
 }

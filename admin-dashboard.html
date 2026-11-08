@@ -143,7 +143,7 @@
       <p class="lead">Add a new student and see everyone enrolled.</p>
 
       <form class="card" id="studentForm" novalidate>
-        <h2>Add new student</h2>
+        <h2 id="studentFormTitle">Add new student</h2>
         <div class="grid">
           <div class="wide">
             <label for="s_name">Student name</label>
@@ -179,6 +179,7 @@
         </div>
         <div class="actions">
           <button class="btn" id="studentBtn" type="submit">Save student</button>
+          <button class="btn alt" id="studentCancel" type="button" hidden>Cancel edit</button>
           <div id="studentMsg" class="msg" role="status" hidden></div>
         </div>
       </form>
@@ -193,7 +194,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Class</th><th>Roll</th><th>Student</th><th>Father</th><th>Mother</th><th>WhatsApp</th><th>Monthly fee</th></tr></thead>
+            <thead><tr><th>Class</th><th>Roll</th><th>Student</th><th>Father</th><th>Mother</th><th>WhatsApp</th><th>Monthly fee</th><th></th></tr></thead>
             <tbody id="studentRows"></tbody>
           </table>
         </div>
@@ -207,7 +208,7 @@
       <p class="lead">Add a teacher. A login is created so they can sign in with their email.</p>
 
       <form class="card" id="teacherForm" novalidate>
-        <h2>Add new teacher</h2>
+        <h2 id="teacherFormTitle">Add new teacher</h2>
         <div class="grid">
           <div class="wide">
             <label for="t_name">Teacher name</label>
@@ -239,6 +240,7 @@
         </div>
         <div class="actions">
           <button class="btn" id="teacherBtn" type="submit">Save teacher</button>
+          <button class="btn alt" id="teacherCancel" type="button" hidden>Cancel edit</button>
           <div id="teacherMsg" class="msg" role="status" hidden></div>
         </div>
       </form>
@@ -247,7 +249,7 @@
         <div class="list-head"><h2>All teachers</h2></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Name</th><th>Subject</th><th>Qualification</th><th>Phone</th><th>Email</th></tr></thead>
+            <thead><tr><th>Name</th><th>Subject</th><th>Qualification</th><th>Phone</th><th>Email</th><th></th></tr></thead>
             <tbody id="teacherRows"></tbody>
           </table>
         </div>
