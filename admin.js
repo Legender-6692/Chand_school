@@ -99,6 +99,8 @@ function startApp() {
   listenTeachers();
   listenNotices();
   $("noticeForm").addEventListener("submit", postNotice);
+  $("studentCancel").addEventListener("click", exitStudentEdit);
+  $("teacherCancel").addEventListener("click", exitTeacherEdit);
   $("studentForm").addEventListener("submit", saveStudent);
   $("teacherForm").addEventListener("submit", saveTeacher);
   $("s_search").addEventListener("input", renderStudents);
@@ -237,6 +239,7 @@ async function saveTeacher(e) {
 
   if (!name || !subject) return showMsg(msg, "Fill in the teacher's name and subject.");
   if (!phone) return showMsg(msg, "The phone number looks wrong. Check the country code and number.");
+  if (editingTeacher) return updateTeacherRecord(name, subject, qualification, phone);
   if (!email) return showMsg(msg, "Enter the login email.");
   if (password.length < 6) return showMsg(msg, "The password needs at least 6 characters.");
 
@@ -438,5 +441,169 @@ async function deleteTeacher(t) {
     alert(err.code === "permission-denied"
       ? "Not allowed. Check the Firestore rules (see firestore.rules)."
       : "Could not delete. Check your internet and try again.");
+  }
+}
+
+/* ---------- Edit student / teacher ---------- */
+let editingStudent = null;
+let editingTeacher = null;
+
+function actionsCell(onEdit, onDelete) {
+  const td = document.createElement("td");
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.gap = "8px";
+  [["Edit", onEdit], ["Delete", onDelete]].forEach(([label, fn]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn alt small";
+    b.textContent = label;
+    b.addEventListener("click", async () => {
+      b.disabled = true;
+      try { await fn(); } finally { b.disabled = false; }
+    });
+    wrap.appendChild(b);
+  });
+  td.appendChild(wrap);
+  return td;
+}
+
+// Stored phone is digits only, e.g. 919876543210 -> code 91, number 9876543210
+function splitPhone(full) {
+  const s = String(full || "");
+  if (s.length > 10) return [s.slice(0, s.length - 10), s.slice(-10)];
+  return [s.slice(0, 2), s.slice(2)];
+}
+
+/* --- Student --- */
+function startEditStudent(s) {
+  editingStudent = s;
+  const [code, num] = splitPhone(s.parentPhone);
+  $("s_name").value = s.name || "";
+  $("s_father").value = s.fatherName || "";
+  $("s_mother").value = s.motherName || "";
+  $("s_class").value = s.class || "";
+  $("s_roll").value = s.rollNo || "";
+  $("s_code").value = "+" + code;
+  $("s_phone").value = num;
+  $("s_fee").value = s.monthlyFee;
+  $("studentFormTitle").textContent = `Edit ${s.name}`;
+  $("studentBtn").textContent = "Save changes";
+  $("studentCancel").hidden = false;
+  hideMsg($("studentMsg"));
+  $("studentForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function exitStudentEdit() {
+  editingStudent = null;
+  $("studentForm").reset();
+  $("s_code").value = "+91";
+  $("studentFormTitle").textContent = "Add new student";
+  $("studentBtn").textContent = "Save student";
+  $("studentCancel").hidden = true;
+  hideMsg($("studentMsg"));
+}
+
+// Saves the changes and keeps the parent link and fee records in step
+async function updateStudentRecord(old, n) {
+  const id = old.id;
+  const batch = writeBatch(db);
+  batch.update(doc(db, "students", id), {
+    name: n.name, fatherName: n.fatherName, motherName: n.motherName,
+    class: n.cls, rollNo: n.rollNo, parentPhone: n.parentPhone, monthlyFee: n.monthlyFee
+  });
+
+  // Parent phone link: replace this child's entry, and move it if the phone changed
+  const newRef = doc(db, "parentIndex", n.parentPhone);
+  const newSnap = await getDoc(newRef);
+  const kids = (newSnap.exists() ? newSnap.data().children || [] : []).filter((c) => c.id !== id);
+  kids.push({ id, name: n.name, class: n.cls, rollNo: n.rollNo });
+  batch.set(newRef, { phone: n.parentPhone, children: kids }, { merge: true });
+
+  if (old.parentPhone && old.parentPhone !== n.parentPhone) {
+    const oldRef = doc(db, "parentIndex", old.parentPhone);
+    const oldSnap = await getDoc(oldRef);
+    if (oldSnap.exists()) {
+      const rest = (oldSnap.data().children || []).filter((c) => c.id !== id);
+      if (rest.length) batch.update(oldRef, { children: rest });
+      else batch.delete(oldRef);
+    }
+  }
+
+  // Fee records: refresh the copied details; this month's fee follows a changed monthly fee
+  const now = new Date();
+  const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const fees = await getDocs(query(collection(db, "fees"), where("studentId", "==", id)));
+  fees.docs.forEach((d) => {
+    const f = d.data();
+    const upd = {
+      studentName: n.name, fatherName: n.fatherName,
+      class: n.cls, rollNo: n.rollNo, parentPhone: n.parentPhone
+    };
+    if (f.month === cur && Number(f.monthlyFee) !== n.monthlyFee) {
+      upd.monthlyFee = n.monthlyFee;
+      upd.totalDue = n.monthlyFee + (f.arrears || 0);
+    }
+    batch.update(d.ref, upd);
+  });
+
+  await batch.commit();
+}
+
+/* --- Teacher (the login email and password are not changed here) --- */
+function startEditTeacher(t) {
+  editingTeacher = t;
+  const [code, num] = splitPhone(t.phone);
+  $("t_name").value = t.name || "";
+  $("t_subject").value = t.subject || "";
+  $("t_qual").value = t.qualification || "";
+  $("t_code").value = "+" + code;
+  $("t_phone").value = num;
+  $("t_email").value = t.email || "";
+  $("t_email").disabled = true;
+  $("t_pass").value = "";
+  $("t_pass").disabled = true;
+  $("t_pass").placeholder = "Not changed here";
+  $("teacherFormTitle").textContent = `Edit ${t.name}`;
+  $("teacherBtn").textContent = "Save changes";
+  $("teacherCancel").hidden = false;
+  hideMsg($("teacherMsg"));
+  $("teacherForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function exitTeacherEdit() {
+  editingTeacher = null;
+  $("teacherForm").reset();
+  $("t_code").value = "+91";
+  $("t_email").disabled = false;
+  $("t_pass").disabled = false;
+  $("t_pass").placeholder = "";
+  $("teacherFormTitle").textContent = "Add new teacher";
+  $("teacherBtn").textContent = "Save teacher";
+  $("teacherCancel").hidden = true;
+  hideMsg($("teacherMsg"));
+}
+
+async function updateTeacherRecord(name, subject, qualification, phone) {
+  const msg = $("teacherMsg");
+  const btn = $("teacherBtn");
+  const id = editingTeacher.id;
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+  try {
+    const batch = writeBatch(db);
+    batch.update(doc(db, "teachers", id), { name, subject, qualification, phone });
+    batch.update(doc(db, "users", id), { name });
+    await batch.commit();
+    exitTeacherEdit();
+    showMsg(msg, `${name} updated.`, "ok");
+  } catch (err) {
+    console.error(err);
+    btn.textContent = "Save changes";
+    showMsg(msg, err.code === "permission-denied"
+      ? "Not allowed. Check the Firestore rules (see firestore.rules)."
+      : "Could not save. Check your internet and try again.");
+  } finally {
+    btn.disabled = false;
   }
 }
