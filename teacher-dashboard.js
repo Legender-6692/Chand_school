@@ -27,6 +27,19 @@ const CURRENCY = "Rs.";
 let started = false;
 let defaulters = [];
 
+// Shows a visible error instead of bouncing the user between pages
+function showFatal(text) {
+  let box = document.getElementById("fatalBox");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "fatalBox";
+    box.setAttribute("role", "alert");
+    box.style.cssText = "margin:12px;padding:12px 14px;border-radius:8px;background:#fdecea;color:#b3261e;font:16px system-ui,sans-serif";
+    document.body.prepend(box);
+  }
+  box.textContent = text;
+}
+
 /* ---------- Sign-in guard: teachers (and admin) only ---------- */
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.replace("index.html"); return; }
@@ -39,10 +52,14 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     $("userName").textContent = data.name || user.email;
-    if (!started) { started = true; start(); }
+    if (!started) {
+      started = true;
+      try { start(); }
+      catch (err) { console.error(err); showFatal("Something on this page failed to start. Refresh the page. If it keeps happening, tell the admin."); }
+    }
   } catch (e) {
     console.error(e);
-    location.replace("index.html");
+    showFatal("Could not load this page. Check your internet and refresh. If it keeps happening, tell the admin.");
   }
 });
 
