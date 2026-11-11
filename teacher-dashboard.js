@@ -14,10 +14,11 @@ const CLASSES = [
 const $ = (id) => document.getElementById(id);
 const classIndex = (c) => CLASSES.indexOf(c);
 const naturalCompare = (a, b) => String(a).localeCompare(String(b), undefined, { numeric: true });
-function cell(text, cls) {
+function cell(text, cls, label) {
   const td = document.createElement("td");
   td.textContent = text;
   if (cls) td.className = cls;
+  if (label) td.dataset.label = label;
   return td;
 }
 // Students whose fee is still unpaid are listed from the day AFTER this day of the month
@@ -54,7 +55,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("nav button").forEach((b) => b.removeAttribute("aria-current"));
     btn.setAttribute("aria-current", "page");
-    ["students", "defaulters", "attendance", "notices"].forEach((v) => {
+    ["students", "defaulters", "notices"].forEach((v) => {
       $("view-" + v).hidden = btn.dataset.view !== v;
     });
   });
@@ -65,9 +66,6 @@ function start() {
   sel.innerHTML = '<option value="" disabled selected>Choose class</option>';
   CLASSES.forEach((c) => sel.add(new Option(c, c)));
   sel.addEventListener("change", loadStudents);
-  $("a_date").addEventListener("change", loadAttendance);
-  $("a_clear").addEventListener("click", () => { $("a_date").value = ""; loadAttendance(); });
-  loadAttendance();
   loadNotices();
   setupDefaulters();
 }
@@ -85,8 +83,8 @@ async function loadStudents() {
       .sort((a, b) => naturalCompare(a.rollNo, b.rollNo));
     rows.forEach((s) => {
       const tr = document.createElement("tr");
-      tr.append(cell(s.rollNo), cell(s.name), cell(s.fatherName || ""),
-                cell(s.parentPhone ? "+" + s.parentPhone : ""));
+      tr.append(cell(s.rollNo, "", "Roll"), cell(s.name, "", "Student"), cell(s.fatherName || "", "", "Father"),
+                cell(s.parentPhone ? "+" + s.parentPhone : "", "", "Parent number"));
       body.appendChild(tr);
     });
     empty.textContent = rows.length === 0 ? `No students in ${cls} yet.` : `${rows.length} students in ${cls}.`;
@@ -94,44 +92,6 @@ async function loadStudents() {
   } catch (err) {
     console.error(err);
     empty.textContent = "Could not load students. Check the Firestore rules.";
-    empty.hidden = false;
-  }
-}
-
-/* ---------- Attendance records (read only) ---------- */
-async function loadAttendance() {
-  const day = $("a_date").value;
-  const q = day
-    ? query(collection(db, "attendance"), where("date", "==", day))
-    : query(collection(db, "attendance"), orderBy("date", "desc"), limit(40));
-  const body = $("attRows");
-  const empty = $("attEmpty");
-  const totals = $("a_totals");
-  body.innerHTML = "";
-  try {
-    const snap = await getDocs(q);
-    const rows = snap.docs.map((d) => d.data())
-      .map((a) => ({ ...a, total: a.total ?? ((a.present || 0) + (a.absent || 0) + (a.leave || 0)) }))
-      .sort((a, b) => b.date.localeCompare(a.date) || classIndex(a.class) - classIndex(b.class));
-    let t = 0, p = 0, ab = 0, l = 0;
-    rows.forEach((a) => {
-      t += a.total; p += a.present || 0; ab += a.absent || 0; l += a.leave || 0;
-      const tr = document.createElement("tr");
-      tr.append(cell(a.date), cell(a.class), cell(a.total, "num"), cell(a.present || 0, "num"),
-                cell(a.absent || 0, "num"), cell(a.leave || 0, "num"));
-      body.appendChild(tr);
-    });
-    if (day && rows.length > 0) {
-      totals.textContent = `All classes on ${day}: total ${t}, present ${p}, absent ${ab}, leave ${l}`;
-      totals.hidden = false;
-    } else {
-      totals.hidden = true;
-    }
-    empty.textContent = day ? "No attendance saved for this date." : "No attendance saved yet.";
-    empty.hidden = rows.length > 0;
-  } catch (err) {
-    console.error(err);
-    empty.textContent = "Could not load attendance. Check the Firestore rules.";
     empty.hidden = false;
   }
 }
@@ -224,9 +184,10 @@ function renderDefaulters() {
     const balance = f.totalDue - (f.paid || 0);
     owed += balance;
     const tr = document.createElement("tr");
-    tr.append(cell(f.class), cell(f.rollNo), cell(f.studentName), cell(f.fatherName || ""),
-              cell(f.parentPhone ? "+" + f.parentPhone : ""),
-              cell(`${CURRENCY} ${balance.toLocaleString()}`, "num"));
+    tr.append(cell(f.class, "", "Class"), cell(f.rollNo, "", "Roll"), cell(f.studentName, "", "Student"),
+              cell(f.fatherName || "", "", "Father"),
+              cell(f.parentPhone ? "+" + f.parentPhone : "", "", "Parent number"),
+              cell(`${CURRENCY} ${balance.toLocaleString()}`, "num", "Balance"));
     body.appendChild(tr);
   });
   const month = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;

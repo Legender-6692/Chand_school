@@ -27,8 +27,8 @@
     .top .grow { flex: 1; min-width: 0; }
     .signout { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
     .signout:hover { border-color: #fff; }
-    nav { max-width: 900px; margin: 14px auto 0; display: flex; gap: 6px; }
-    nav button { background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500; padding: 10px 16px; border-radius: 8px 8px 0 0; cursor: pointer; }
+    nav { max-width: 900px; margin: 14px auto 0; display: flex; gap: 4px; }
+    nav button { flex: 1; min-width: 0; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500; padding: 11px 6px; text-align: center; border-radius: 8px 8px 0 0; cursor: pointer; }
     nav button[aria-current="page"] { background: var(--chalk); color: var(--ink-deep); font-weight: 700; }
 
     main { max-width: 900px; margin: 0 auto; padding: 26px 18px 60px; }
@@ -54,6 +54,24 @@
     .notice h3 { font-size: 1.05rem; margin-bottom: 2px; }
     .notice time { color: var(--slate); font-size: .88rem; }
     .notice p { margin: 8px 0 0; white-space: pre-wrap; line-height: 1.5; }
+    html, body { overflow-x: hidden; }
+    .top .grow { overflow: hidden; }
+    .top .who { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    @media (max-width: 640px) {
+      header { padding: 12px 14px 0; }
+      header::after { margin: 12px -14px 0; }
+      main { padding: 18px 12px 50px; }
+      .card { padding: 16px; }
+      select, input { max-width: none; }
+      .row > div { flex: 1 1 100%; }
+      .table-wrap { overflow: visible; }
+      table, thead, tbody, tr, td { display: block; }
+      thead { position: absolute; left: -9999px; }
+      tr { border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; background: #fff; }
+      td { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border: 0; padding: 5px 0; text-align: right; }
+      td::before { content: attr(data-label); color: var(--slate); font-weight: 700; font-size: .9rem; text-align: left; flex: none; }
+    }
   </style>
 </head>
 <body>
@@ -70,7 +88,6 @@
     <nav aria-label="Sections">
       <button type="button" data-view="students" aria-current="page">Students</button>
       <button type="button" data-view="defaulters">Defaulters</button>
-      <button type="button" data-view="attendance">Attendance</button>
       <button type="button" data-view="notices">Notices</button>
     </nav>
   </header>
@@ -106,24 +123,6 @@
           </table>
         </div>
         <p class="empty" id="defEmpty" hidden></p>
-      </div>
-    </section>
-
-    <section id="view-attendance" hidden>
-      <div class="card">
-        <h2>Attendance records</h2>
-        <div class="row">
-          <div><label for="a_date">Date</label><input id="a_date" type="date"></div>
-          <button class="btn" id="a_clear" type="button">Show latest</button>
-        </div>
-        <div id="a_totals" class="msg" hidden></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Date</th><th>Class</th><th class="num">Total</th><th class="num">Present</th><th class="num">Absent</th><th class="num">Leave</th></tr></thead>
-            <tbody id="attRows"></tbody>
-          </table>
-        </div>
-        <p class="empty" id="attEmpty" hidden></p>
       </div>
     </section>
 
