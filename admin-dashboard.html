@@ -80,6 +80,9 @@
     input:focus, select:focus, textarea:focus { border-color: var(--ink); }
     .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); }
     .btn.alt:hover { background: #eef0f6; }
+    a.btn { text-decoration: none; display: inline-block; }
+    .msg.info { background: #eaeefb; color: var(--ink); }
+    .msg.warn { background: #fff6d6; color: #6b5200; }
     .btn.small { padding: 6px 12px; font-size: .9rem; }
     input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--bus); outline-offset: 2px; }
     .phone { display: grid; grid-template-columns: 76px 1fr; gap: 8px; }
@@ -128,6 +131,7 @@
       <button type="button" data-view="students" aria-current="page">Students <span class="count" id="studentCount">0</span></button>
       <button type="button" data-view="teachers">Teachers <span class="count" id="teacherCount">0</span></button>
       <button type="button" data-view="notices">Notices <span class="count" id="noticeCount">0</span></button>
+      <button type="button" data-view="parents">Parents <span class="count" id="parentCount">0</span></button>
       <a href="attendance.html">Attendance</a>
       <a href="fees.html">Fees</a>
     </nav>
@@ -286,6 +290,40 @@
           </table>
         </div>
         <p class="empty" id="noticeEmpty" hidden></p>
+      </div>
+    </section>
+
+    <!-- PARENTS -->
+    <section id="view-parents" hidden>
+      <h1>Parents</h1>
+      <p class="lead">Each parent phone number is a username. Set or reset the password here, then send it on WhatsApp.</p>
+
+      <div class="card">
+        <h2>Create logins</h2>
+        <div class="grid">
+          <div class="wide">
+            <label for="p_default">Password for new logins <span class="hint">(leave empty and every parent gets a different random 6-digit password)</span></label>
+            <input id="p_default" type="text" autocomplete="off" placeholder="Leave empty for random">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="p_createAll" type="button">Create missing logins</button>
+          <div id="p_msg" class="msg" role="status" hidden></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="list-head">
+          <h2>Parent logins</h2>
+          <div class="filters"><input id="p_search" type="search" placeholder="Search number or child" aria-label="Search parents"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Username</th><th>Children</th><th>Password</th><th></th></tr></thead>
+            <tbody id="p_rows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="p_empty" hidden></p>
       </div>
     </section>
   </main>

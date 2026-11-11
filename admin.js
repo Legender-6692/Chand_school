@@ -3,7 +3,7 @@ import { app, auth, db } from "./firebase-config.js";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signOut,
-  createUserWithEmailAndPassword, deleteUser
+  createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, updatePassword
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
   doc, getDoc, collection, addDoc, query, where, limit, getDocs,
@@ -104,7 +104,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("nav button").forEach((b) => b.removeAttribute("aria-current"));
     btn.setAttribute("aria-current", "page");
-    ["students", "teachers", "notices"].forEach((v) => {
+    ["students", "teachers", "notices", "parents"].forEach((v) => {
       $("view-" + v).hidden = btn.dataset.view !== v;
     });
   });
@@ -116,6 +116,8 @@ function startApp() {
   listenTeachers();
   listenNotices();
   $("noticeForm").addEventListener("submit", postNotice);
+  listenParents();
+  $("p_createAll").addEventListener("click", createMissingLogins);
   $("studentCancel").addEventListener("click", exitStudentEdit);
   $("teacherCancel").addEventListener("click", exitTeacherEdit);
   $("studentForm").addEventListener("submit", saveStudent);
@@ -182,7 +184,14 @@ async function saveStudent(e) {
 
     $("studentForm").reset();
     $("s_class").value = cls; // keep the class for faster entry of the next student
-    showMsg(msg, `${name} saved.`, "ok");
+    let loginNote = "";
+    try {
+      if (await ensureParentLogin(parentPhone)) loginNote = " A parent login was created (see the Parents tab).";
+    } catch (loginErr) {
+      console.error(loginErr);
+      loginNote = " The parent login could not be created automatically. Use the Parents tab.";
+    }
+    showMsg(msg, `${name} saved.${loginNote}`, "ok");
   } catch (err) {
     console.error(err);
     showMsg(msg, err.code === "permission-denied"
@@ -617,4 +626,208 @@ async function updateTeacherRecord(name, subject, qualification, phone) {
   } finally {
     btn.disabled = false;
   }
+}
+
+
+/* ---------- Parents: logins for the parent page ---------- */
+// Each parent phone number is a username: <phone>@parents.chandschool.app (never shown to parents).
+const PARENT_EMAIL_DOMAIN = "parents.chandschool.app";
+const parentEmail = (phone) => `${phone}@${PARENT_EMAIL_DOMAIN}`;
+let parentIndexDocs = {};   // phone -> { children: [...] }
+let parentLoginDocs = {};   // phone -> { password, uid }
+
+function randomPassword() {
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  return String(100000 + (n[0] % 900000));
+}
+
+function loginMessage(phone, password) {
+  const link = new URL("parent-dashboard.html", location.href).href;
+  return [
+    "Dear Parent,",
+    "",
+    "Chand School parent login:",
+    `Username: +${phone}`,
+    `Password: ${password}`,
+    `Login page: ${link}`,
+    "",
+    "Yahan aap apne bachche ki fee ki halat aur school ke notices dekh sakte hain."
+  ].join("\n");
+}
+
+// Creating or changing another person's login needs a second Firebase app,
+// so the admin does not get signed out.
+async function withSecondaryAuth(fn) {
+  const secApp = initializeApp(app.options, "parent-" + Date.now() + "-" + Math.floor(Math.random() * 1e6));
+  const secAuth = getAuth(secApp);
+  try {
+    return await fn(secAuth);
+  } finally {
+    try { await signOut(secAuth); } catch (_) { /* ignore */ }
+    try { await deleteApp(secApp); } catch (_) { /* ignore */ }
+  }
+}
+
+async function createParentLogin(phone, password) {
+  await withSecondaryAuth(async (secAuth) => {
+    const cred = await createUserWithEmailAndPassword(secAuth, parentEmail(phone), password);
+    try {
+      const batch = writeBatch(db);
+      batch.set(doc(db, "parentLogins", phone), { phone, password, uid: cred.user.uid, createdAt: serverTimestamp() });
+      await batch.commit();
+    } catch (err) {
+      try { await deleteUser(cred.user); } catch (_) { /* ignore */ }
+      throw err;
+    }
+  });
+}
+
+async function changeParentPassword(phone, oldPassword, newPassword) {
+  await withSecondaryAuth(async (secAuth) => {
+    const cred = await signInWithEmailAndPassword(secAuth, parentEmail(phone), oldPassword);
+    await updatePassword(cred.user, newPassword);
+    const batch = writeBatch(db);
+    batch.update(doc(db, "parentLogins", phone), { password: newPassword, updatedAt: serverTimestamp() });
+    await batch.commit();
+  });
+}
+
+// Used when a student is added: give a brand-new parent number a login straight away
+async function ensureParentLogin(phone) {
+  const snap = await getDoc(doc(db, "parentLogins", phone));
+  if (snap.exists()) return false;
+  const typed = $("p_default").value.trim();
+  await createParentLogin(phone, typed.length >= 6 ? typed : randomPassword());
+  return true;
+}
+
+function allParentPhones() {
+  return [...new Set([...Object.keys(parentIndexDocs), ...Object.keys(parentLoginDocs)])].sort();
+}
+
+function listenParents() {
+  const failed = (err) => {
+    console.error(err);
+    $("p_empty").textContent = "Could not load parents. Check the Firestore rules.";
+    $("p_empty").hidden = false;
+  };
+  onSnapshot(collection(db, "parentIndex"), (snap) => {
+    parentIndexDocs = {};
+    snap.docs.forEach((d) => { parentIndexDocs[d.id] = d.data(); });
+    renderParents();
+  }, failed);
+  onSnapshot(collection(db, "parentLogins"), (snap) => {
+    parentLoginDocs = {};
+    snap.docs.forEach((d) => { parentLoginDocs[d.id] = d.data(); });
+    renderParents();
+  }, failed);
+  $("p_search").addEventListener("input", renderParents);
+}
+
+function renderParents() {
+  const term = $("p_search").value.trim().toLowerCase();
+  const phones = allParentPhones();
+  $("parentCount").textContent = phones.length;
+
+  const body = $("p_rows");
+  body.innerHTML = "";
+  let shown = 0;
+  phones.forEach((phone) => {
+    const kids = (parentIndexDocs[phone]?.children || []).map((c) => `${c.name} (${c.class})`);
+    const text = kids.join(", ");
+    if (term && !phone.includes(term.replace(/\D/g, "") || "\u0000") && !text.toLowerCase().includes(term)) return;
+    shown++;
+    const login = parentLoginDocs[phone];
+    const tr = document.createElement("tr");
+    tr.append(cell("+" + phone), cell(text || "-"));
+
+    const tdPw = document.createElement("td");
+    if (login) {
+      const span = document.createElement("span");
+      span.textContent = "••••••";
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "btn alt small";
+      toggle.style.marginLeft = "8px";
+      toggle.textContent = "Show";
+      toggle.addEventListener("click", () => {
+        const hidden = span.textContent === "••••••";
+        span.textContent = hidden ? login.password : "••••••";
+        toggle.textContent = hidden ? "Hide" : "Show";
+      });
+      tdPw.append(span, toggle);
+    } else {
+      tdPw.textContent = "No login yet";
+    }
+
+    const tdAct = document.createElement("td");
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+    const set = document.createElement("button");
+    set.type = "button";
+    set.className = "btn alt small";
+    set.textContent = login ? "Change password" : "Create login";
+    set.addEventListener("click", async () => { set.disabled = true; try { await setParentPassword(phone); } finally { set.disabled = false; } });
+    wrap.appendChild(set);
+    if (login) {
+      const wa = document.createElement("a");
+      wa.className = "btn small";
+      wa.textContent = "Send on WhatsApp";
+      wa.target = "_blank";
+      wa.rel = "noopener noreferrer";
+      wa.href = `https://wa.me/${phone}?text=${encodeURIComponent(loginMessage(phone, login.password))}`;
+      wrap.appendChild(wa);
+    }
+    tdAct.appendChild(wrap);
+    tr.append(tdPw, tdAct);
+    body.appendChild(tr);
+  });
+
+  const empty = $("p_empty");
+  empty.textContent = phones.length === 0
+    ? "No parent numbers yet. They appear when you add students (or after Update parent portal on the Fees page)."
+    : "No parent matches your search.";
+  empty.hidden = shown > 0;
+}
+
+async function setParentPassword(phone) {
+  const msg = $("p_msg");
+  const login = parentLoginDocs[phone];
+  const pw = prompt(`${login ? "New password" : "Password"} for +${phone}\n(at least 6 characters)`, "");
+  if (pw === null) return;
+  if (pw.trim().length < 6) { alert("The password needs at least 6 characters."); return; }
+  try {
+    if (login) await changeParentPassword(phone, login.password, pw.trim());
+    else await createParentLogin(phone, pw.trim());
+    showMsg(msg, `Password saved for +${phone}.`, "ok");
+  } catch (err) {
+    console.error(err);
+    showMsg(msg, {
+      "auth/email-already-in-use": `+${phone} already has a login that this app does not know. In Firebase > Authentication > Users, delete ${parentEmail(phone)}, then try again.`,
+      "auth/weak-password": "The password is too weak. Use at least 6 characters.",
+      "auth/operation-not-allowed": "Email/Password sign-in is turned off in Firebase Authentication.",
+      "permission-denied": "Not allowed. Check the Firestore rules (see firestore.rules)."
+    }[err.code] || "Could not save the password. Check your internet and try again.");
+  }
+}
+
+async function createMissingLogins() {
+  const msg = $("p_msg");
+  const typed = $("p_default").value.trim();
+  if (typed && typed.length < 6) return showMsg(msg, "The password needs at least 6 characters.");
+  const missing = allParentPhones().filter((p) => !parentLoginDocs[p]);
+  if (missing.length === 0) return showMsg(msg, "Every parent number already has a login.", "ok");
+  if (!confirm(`Create ${missing.length} parent login${missing.length === 1 ? "" : "s"}?\n\n${typed ? "All of them will get the password you typed." : "Each one gets a different random 6-digit password."}`)) return;
+
+  const btn = $("p_createAll");
+  btn.disabled = true;
+  let done = 0, failed = 0;
+  for (const phone of missing) {
+    try { await createParentLogin(phone, typed || randomPassword()); done++; }
+    catch (err) { console.error(err); failed++; }
+    showMsg(msg, `Creating logins… ${done + failed} of ${missing.length}`, "info");
+  }
+  btn.disabled = false;
+  showMsg(msg, `Done. ${done} created${failed ? `, ${failed} failed. Use Create login on those rows to see why.` : "."}`, failed ? "warn" : "ok");
 }

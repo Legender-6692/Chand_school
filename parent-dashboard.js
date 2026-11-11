@@ -1,7 +1,6 @@
 // parent-dashboard.js - logic for parent-dashboard.html
-// Parents sign in with their phone number (username) and the common school password.
-// Under the hood one shared "parent" account is used, and the phone number
-// opens the matching family record by its exact id. Nothing can be listed or browsed.
+// Parents sign in with their phone number (username) and the password the school gave them.
+// Each family can only open its own record. Nothing can be listed or browsed.
 import { auth, db } from "./firebase-config.js";
 import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut,
@@ -14,9 +13,8 @@ import {
 /* ============ Settings you can change ============ */
 const DEFAULT_COUNTRY_CODE = "91";   // added when a parent types a 10-digit number
 const CURRENCY = "Rs.";
-// The shared parent account you create in Firebase Authentication (see setup steps).
-// Parents never see or type this email.
-const SHARED_PARENT_EMAIL = "parents@chandschool.app";
+// Each parent phone number is a login: <phone>@parents.chandschool.app (set up by the admin).
+const PARENT_EMAIL_DOMAIN = "parents.chandschool.app";
 /* ================================================== */
 
 const $ = (id) => document.getElementById(id);
@@ -113,32 +111,12 @@ function renderChild({ child, fee, feeMonth }) {
 }
 
 /* ---------- Sign in and show the family ---------- */
-const SAVED_KEY = "chandParentPhone";
 let busy = false;
-
-function savedPhone() {
-  try { return localStorage.getItem(SAVED_KEY) || sessionStorage.getItem(SAVED_KEY); }
-  catch (e) { return null; }
-}
-function savePhone(id, remember) {
-  try {
-    localStorage.removeItem(SAVED_KEY); sessionStorage.removeItem(SAVED_KEY);
-    (remember ? localStorage : sessionStorage).setItem(SAVED_KEY, id);
-  } catch (e) { /* storage not available: they will just sign in again next time */ }
-}
-function forgetPhone() {
-  try { localStorage.removeItem(SAVED_KEY); sessionStorage.removeItem(SAVED_KEY); } catch (e) { /* ignore */ }
-}
 
 function showSignedIn(signedIn, phoneId) {
   $("loginForm").hidden = signedIn;
   $("signedBar").hidden = !signedIn;
   if (phoneId) $("signedPhone").textContent = "+" + phoneId;
-}
-
-async function isParentUser(user) {
-  const s = await getDoc(doc(db, "users", user.uid));
-  return s.exists() && s.data().role === "parent" && s.data().active !== false;
 }
 
 // Shows the children linked to this phone number. Returns false if there are none.
@@ -150,6 +128,23 @@ async function showFamily(phoneId) {
   $("results").innerHTML = "";
   data.forEach((d) => $("results").append(renderChild(d)));
   return true;
+}
+
+const WRONG_LOGIN = ["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password", "auth/invalid-email"];
+
+// The number may be stored with or without the country code, so try each form
+async function trySignIn(candidates, password) {
+  let lastErr = null;
+  for (const id of candidates) {
+    try {
+      await signInWithEmailAndPassword(auth, `${id}@${PARENT_EMAIL_DOMAIN}`, password);
+      return id;
+    } catch (err) {
+      lastErr = err;
+      if (!WRONG_LOGIN.includes(err.code)) throw err;
+    }
+  }
+  throw lastErr;
 }
 
 $("loginForm").addEventListener("submit", async (e) => {
@@ -167,30 +162,20 @@ $("loginForm").addEventListener("submit", async (e) => {
   btn.textContent = "Signing in…";
   busy = true;
   try {
-    const remember = $("remember").checked;
-    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-    const cred = await signInWithEmailAndPassword(auth, SHARED_PARENT_EMAIL, password);
-    if (!(await isParentUser(cred.user))) {
+    await setPersistence(auth, $("remember").checked ? browserLocalPersistence : browserSessionPersistence);
+    const id = await trySignIn(candidates, password);
+    if (!(await showFamily(id))) {
       await signOut(auth);
-      return showMsg("Parent login is not set up yet. Please ask the school office.");
+      return showMsg("No student is linked to this number yet. Please contact the school office.");
     }
-    let matched = null;
-    for (const id of candidates) {
-      if (await showFamily(id)) { matched = id; break; }
-    }
-    if (!matched) {
-      await signOut(auth);
-      return showMsg("No student found for this number. Please check it, or contact the school office.");
-    }
-    savePhone(matched, remember);
     $("password").value = "";
-    showSignedIn(true, matched);
+    showSignedIn(true, id);
   } catch (err) {
     console.error(err);
     const text = {
-      "auth/invalid-credential": "The password is not correct. Please ask the school office.",
-      "auth/wrong-password": "The password is not correct. Please ask the school office.",
-      "auth/user-not-found": "Parent login is not set up yet. Please ask the school office.",
+      "auth/invalid-credential": "The phone number or password is not correct. Please check, or ask the school office.",
+      "auth/wrong-password": "The phone number or password is not correct. Please check, or ask the school office.",
+      "auth/user-not-found": "The phone number or password is not correct. Please check, or ask the school office.",
       "auth/too-many-requests": "Too many attempts. Please wait a few minutes and try again.",
       "auth/network-request-failed": "No internet connection. Check your network and try again.",
       "permission-denied": "This page is not set up yet. Please ask the school office."
@@ -204,7 +189,6 @@ $("loginForm").addEventListener("submit", async (e) => {
 });
 
 $("logoutBtn").addEventListener("click", async () => {
-  forgetPhone();
   await signOut(auth);
   $("results").innerHTML = "";
   showSignedIn(false);
@@ -212,12 +196,10 @@ $("logoutBtn").addEventListener("click", async () => {
 
 // Come back later: if still signed in on this phone, show the family straight away
 onAuthStateChanged(auth, async (user) => {
-  if (!user || busy) return;
-  const saved = savedPhone();
-  if (!saved) return;
+  if (!user || busy || !user.email || !user.email.endsWith("@" + PARENT_EMAIL_DOMAIN)) return;
+  const id = user.email.split("@")[0];
   try {
-    if (!(await isParentUser(user))) return;
-    if (await showFamily(saved)) showSignedIn(true, saved);
+    if (await showFamily(id)) showSignedIn(true, id);
   } catch (err) {
     console.error(err);
   }
