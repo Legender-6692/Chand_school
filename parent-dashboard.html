@@ -66,6 +66,18 @@
     .msg.error { background: var(--error-bg); color: var(--error); }
     .msg.info { background: #eaeefb; color: var(--ink); }
 
+    .field { margin-bottom: 16px; }
+    .field input { width: 100%; }
+    .hintline { font-weight: 400; color: var(--slate); font-size: .9rem; }
+    .check { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 4px 0 18px; cursor: pointer; }
+    .check input { flex: none; width: 18px; height: 18px; accent-color: var(--ink); }
+    .btn.full { width: 100%; }
+    .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); padding: 8px 16px; }
+    .btn.alt:hover { background: #eef0f6; }
+    .bar-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .bar-row[hidden] { display: none; }
+    form[hidden] { display: none; }
+
     /* Child card */
     .child h2 { font-size: 1.45rem; margin-bottom: 2px; }
     .child .meta { color: var(--slate); margin: 0 0 18px; }
@@ -114,17 +126,27 @@
   </header>
 
   <main>
-    <form class="card" id="lookupForm" novalidate>
-      <h2>Check your child</h2>
-      <p class="sub">See fee status, attendance and school notices.</p>
-      <label for="phone">Parent WhatsApp / phone number</label>
-      <div class="row">
-        <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="98765 43210" required>
-        <button class="btn" id="goBtn" type="submit">View</button>
+    <form class="card" id="loginForm" novalidate>
+      <h2>Parent login</h2>
+      <p class="sub">Sign in with your phone number to see your child's fee status and school notices.</p>
+      <div class="field">
+        <label for="phone">Phone number <span class="hintline">(your username)</span></label>
+        <input id="phone" type="tel" inputmode="numeric" autocomplete="username" placeholder="98765 43210" required>
       </div>
-      <p class="hint">Use the number you gave the school. If it is not an Indian (+91) number, type it with the country code.</p>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+      </div>
+      <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in on this phone</label>
+      <button class="btn full" id="goBtn" type="submit">Sign in</button>
+      <p class="hint">Use the number you gave the school. If it is not an Indian (+91) number, type it with the country code. Ask the school office for the password.</p>
       <div id="lookupMsg" class="msg" role="alert" hidden></div>
     </form>
+
+    <div class="bar-row" id="signedBar" hidden>
+      <span>Signed in as <strong id="signedPhone"></strong></span>
+      <button class="btn alt" id="logoutBtn" type="button">Sign out</button>
+    </div>
 
     <div id="results"></div>
 

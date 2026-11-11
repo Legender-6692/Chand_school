@@ -14,6 +14,12 @@ service cloud.firestore {
     function isStaff() {
       return signedIn() && myRole() in ['admin', 'teacher', 'coordinator'];
     }
+    function isParent() {
+      return signedIn() && myRole() == 'parent';
+    }
+    function isTeacher() {
+      return signedIn() && myRole() == 'teacher';
+    }
     function canMarkAttendance() {
       return signedIn() && myRole() in ['admin', 'coordinator'];
     }
@@ -42,30 +48,24 @@ service cloud.firestore {
       allow write: if canMarkAttendance();
     }
 
-    // ---- Parent corner (parents are not signed in) ----
-    // A parent can open ONE record if they know its exact id.
+    // ---- Parent corner ----
+    // Parents sign in (one shared parent account). They can open ONE record by its exact id.
     // Nobody can list or browse these collections except staff.
 
     // phone number -> the children linked to it
     match /parentIndex/{phone} {
-      allow get: if true;
+      allow get: if isAdmin() || isParent();
       allow list, write: if isAdmin();
     }
 
     // Monthly fee records and payments
     match /fees/{id} {
-      allow get: if true;
-      allow list, write: if isAdmin();
+      allow get: if isAdmin() || isTeacher() || isParent();
+      allow list: if isAdmin() || isTeacher();
+      allow write: if isAdmin();
     }
     match /feePayments/{id} {
       allow read, write: if isAdmin();
-    }
-
-    // Monthly attendance totals per student
-    match /attendanceSummary/{id} {
-      allow get: if true;
-      allow list: if isStaff();
-      allow write: if canMarkAttendance();
     }
 
     // School notices: anyone can read, only admin can post

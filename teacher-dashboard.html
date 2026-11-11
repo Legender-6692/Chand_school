@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teacher · Chand School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1d2b4f; --ink-deep: #14203d; --chalk: #f7f6f2; --bus: #f2b705;
+      --slate: #5b6478; --line: #d9dbe2; --error: #b3261e; --error-bg: #fdecea;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family: "Mukta", system-ui, sans-serif; font-size: 16.5px; color: var(--ink-deep); background: var(--chalk); min-height: 100vh; }
+    h1, h2, h3 { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.01em; margin: 0; }
+
+    header { background: var(--ink); color: #fff; padding: 14px 20px 0; position: relative; }
+    header::after { content: ""; display: block; height: 8px; margin: 14px -20px 0;
+      background: repeating-linear-gradient(90deg, var(--bus) 0 28px, var(--ink) 28px 40px); }
+    .top { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+    .crest { width: 38px; height: 38px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; flex: none; }
+    .top .name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.2rem; line-height: 1.1; }
+    .top .who { color: #c9d0e4; font-size: .9rem; }
+    .top .grow { flex: 1; min-width: 0; }
+    .signout { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .signout:hover { border-color: #fff; }
+    nav { max-width: 900px; margin: 14px auto 0; display: flex; gap: 6px; }
+    nav button { background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500; padding: 10px 16px; border-radius: 8px 8px 0 0; cursor: pointer; }
+    nav button[aria-current="page"] { background: var(--chalk); color: var(--ink-deep); font-weight: 700; }
+
+    main { max-width: 900px; margin: 0 auto; padding: 26px 18px 60px; }
+    section[hidden] { display: none; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 22px; margin-bottom: 22px; }
+    .card h2 { font-size: 1.25rem; margin-bottom: 14px; }
+    .lead { color: var(--slate); margin: 0 0 18px; }
+    label { display: block; font-weight: 700; margin-bottom: 6px; font-size: .97rem; }
+    select, input { width: 100%; max-width: 320px; padding: 11px 12px; font: inherit; color: inherit; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; }
+    select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--bus); outline-offset: 2px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
+    .btn { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 8px; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .97rem; }
+    th { text-align: left; font-weight: 700; color: var(--slate); padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .empty { color: var(--slate); margin: 8px 0 0; }
+    .msg { padding: 10px 14px; border-radius: 8px; background: #eaeefb; color: var(--ink); margin-bottom: 14px; }
+    .msg[hidden] { display: none; }
+    .notice { border-top: 1px solid var(--line); padding: 14px 0; }
+    .notice:first-of-type { border-top: 0; padding-top: 4px; }
+    .notice h3 { font-size: 1.05rem; margin-bottom: 2px; }
+    .notice time { color: var(--slate); font-size: .88rem; }
+    .notice p { margin: 8px 0 0; white-space: pre-wrap; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="top">
+      <div class="crest" aria-hidden="true">C</div>
+      <div class="grow">
+        <div class="name">Chand School</div>
+        <div class="who" id="userName">Teacher</div>
+      </div>
+      <button class="signout" id="logoutBtn" type="button">Sign out</button>
+    </div>
+    <nav aria-label="Sections">
+      <button type="button" data-view="students" aria-current="page">Students</button>
+      <button type="button" data-view="defaulters">Defaulters</button>
+      <button type="button" data-view="attendance">Attendance</button>
+      <button type="button" data-view="notices">Notices</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="view-students">
+      <div class="card">
+        <h2>Class list</h2>
+        <div class="row">
+          <div><label for="s_class">Class</label><select id="s_class"></select></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Roll</th><th>Student</th><th>Father</th><th>Parent number</th></tr></thead>
+            <tbody id="studentRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="studentEmpty">Choose a class to see its students.</p>
+      </div>
+    </section>
+
+    <section id="view-defaulters" hidden>
+      <div class="card">
+        <h2>Defaulters</h2>
+        <div id="d_info" class="msg" hidden></div>
+        <div class="row">
+          <div><label for="d_class">Class</label><select id="d_class"></select></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Class</th><th>Roll</th><th>Student</th><th>Father</th><th>Parent number</th><th class="num">Balance</th></tr></thead>
+            <tbody id="defRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="defEmpty" hidden></p>
+      </div>
+    </section>
+
+    <section id="view-attendance" hidden>
+      <div class="card">
+        <h2>Attendance records</h2>
+        <div class="row">
+          <div><label for="a_date">Date</label><input id="a_date" type="date"></div>
+          <button class="btn" id="a_clear" type="button">Show latest</button>
+        </div>
+        <div id="a_totals" class="msg" hidden></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Class</th><th class="num">Total</th><th class="num">Present</th><th class="num">Absent</th><th class="num">Leave</th></tr></thead>
+            <tbody id="attRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="attEmpty" hidden></p>
+      </div>
+    </section>
+
+    <section id="view-notices" hidden>
+      <div class="card">
+        <h2>School notices</h2>
+        <div id="notices"><p class="empty">Loading…</p></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="teacher-dashboard.js"></script>
+</body>
+</html>

@@ -115,13 +115,12 @@ async function saveStudent(e) {
 
   const name = $("s_name").value.trim();
   const fatherName = $("s_father").value.trim();
-  const motherName = $("s_mother").value.trim();
   const cls = $("s_class").value;
   const rollNo = $("s_roll").value.trim();
   const parentPhone = buildPhone($("s_code").value, $("s_phone").value);
   const monthlyFee = Number($("s_fee").value);
 
-  if (!name || !fatherName || !motherName) return showMsg(msg, "Fill in the student, father and mother names.");
+  if (!name || !fatherName) return showMsg(msg, "Fill in the student and father names.");
   if (!cls) return showMsg(msg, "Choose the class.");
   if (!rollNo) return showMsg(msg, "Enter the roll number.");
   if (!parentPhone) return showMsg(msg, "The WhatsApp number looks wrong. Check the country code and number.");
@@ -143,7 +142,7 @@ async function saveStudent(e) {
     }
 
     if (editingStudent) {
-      await updateStudentRecord(editingStudent, { name, fatherName, motherName, cls, rollNo, parentPhone, monthlyFee });
+      await updateStudentRecord(editingStudent, { name, fatherName, cls, rollNo, parentPhone, monthlyFee });
       exitStudentEdit();
       showMsg(msg, `${name} updated.`, "ok");
       return;
@@ -152,7 +151,7 @@ async function saveStudent(e) {
     const studentRef = doc(collection(db, "students"));
     const batch = writeBatch(db);
     batch.set(studentRef, {
-      name, fatherName, motherName,
+      name, fatherName,
       class: cls, rollNo, parentPhone, monthlyFee,
       status: "active",
       createdAt: serverTimestamp()
@@ -206,7 +205,7 @@ function renderStudents() {
   body.innerHTML = "";
   rows.forEach((s) => {
     const tr = document.createElement("tr");
-    [s.class, s.rollNo, s.name, s.fatherName, s.motherName,
+    [s.class, s.rollNo, s.name, s.fatherName,
      "+" + s.parentPhone, Number(s.monthlyFee).toLocaleString()]
       .forEach((v) => tr.appendChild(cell(v)));
     tr.appendChild(actionsCell(() => startEditStudent(s), () => deleteStudent(s)));
@@ -391,21 +390,17 @@ function deleteCell(onClick) {
   return td;
 }
 
-// Removes the student, all their fee records and attendance totals,
+// Removes the student and all their fee records,
 // and unlinks them from the parent's phone number.
 // (Payment history in "feePayments" is kept as an accounts record.)
 async function deleteStudent(s) {
-  if (!confirm(`Delete ${s.name} (${s.class}, Roll ${s.rollNo})?\n\nTheir fee records and attendance totals will also be deleted. This cannot be undone.`)) return;
+  if (!confirm(`Delete ${s.name} (${s.class}, Roll ${s.rollNo})?\n\nTheir fee records will also be deleted. This cannot be undone.`)) return;
   try {
     const batch = writeBatch(db);
     batch.delete(doc(db, "students", s.id));
 
-    const [fees, sums] = await Promise.all([
-      getDocs(query(collection(db, "fees"), where("studentId", "==", s.id))),
-      getDocs(query(collection(db, "attendanceSummary"), where("studentId", "==", s.id)))
-    ]);
+    const fees = await getDocs(query(collection(db, "fees"), where("studentId", "==", s.id)));
     fees.docs.forEach((d) => batch.delete(d.ref));
-    sums.docs.forEach((d) => batch.delete(d.ref));
 
     // Remove this child from the parent's phone link
     if (s.parentPhone) {
@@ -481,7 +476,6 @@ function startEditStudent(s) {
   const [code, num] = splitPhone(s.parentPhone);
   $("s_name").value = s.name || "";
   $("s_father").value = s.fatherName || "";
-  $("s_mother").value = s.motherName || "";
   $("s_class").value = s.class || "";
   $("s_roll").value = s.rollNo || "";
   $("s_code").value = "+" + code;
@@ -509,7 +503,7 @@ async function updateStudentRecord(old, n) {
   const id = old.id;
   const batch = writeBatch(db);
   batch.update(doc(db, "students", id), {
-    name: n.name, fatherName: n.fatherName, motherName: n.motherName,
+    name: n.name, fatherName: n.fatherName,
     class: n.cls, rollNo: n.rollNo, parentPhone: n.parentPhone, monthlyFee: n.monthlyFee
   });
 

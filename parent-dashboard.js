@@ -1,7 +1,12 @@
 // parent-dashboard.js - logic for parent-dashboard.html
-// Parents do not sign in. They type their phone number; the app opens the
-// matching record by its exact id. Nothing can be listed or browsed.
-import { db } from "./firebase-config.js";
+// Parents sign in with their phone number (username) and the common school password.
+// Under the hood one shared "parent" account is used, and the phone number
+// opens the matching family record by its exact id. Nothing can be listed or browsed.
+import { auth, db } from "./firebase-config.js";
+import {
+  signInWithEmailAndPassword, onAuthStateChanged, signOut,
+  setPersistence, browserLocalPersistence, browserSessionPersistence
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
   doc, getDoc, collection, getDocs, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -9,6 +14,9 @@ import {
 /* ============ Settings you can change ============ */
 const DEFAULT_COUNTRY_CODE = "91";   // added when a parent types a 10-digit number
 const CURRENCY = "Rs.";
+// The shared parent account you create in Firebase Authentication (see setup steps).
+// Parents never see or type this email.
+const SHARED_PARENT_EMAIL = "parents@chandschool.app";
 /* ================================================== */
 
 const $ = (id) => document.getElementById(id);
@@ -60,8 +68,7 @@ async function loadChild(child) {
     const s = await getDoc(doc(db, "fees", `${child.id}_${m}`));
     if (s.exists()) { fee = s.data(); feeMonth = m; break; }
   }
-  const a = await getDoc(doc(db, "attendanceSummary", `${child.id}_${cur}`));
-  return { child, fee, feeMonth, att: a.exists() ? a.data() : null, attMonth: cur };
+  return { child, fee, feeMonth };
 }
 
 /* ---------- Rendering ---------- */
@@ -71,7 +78,7 @@ function row(dl, label, value, cls) {
   dl.append(dt, dd);
 }
 
-function renderChild({ child, fee, feeMonth, att, attMonth }) {
+function renderChild({ child, fee, feeMonth }) {
   const card = el("section", "card child");
   card.append(el("h2", null, child.name));
   card.append(el("p", "meta", `${child.class} · Roll no. ${child.rollNo}`));
@@ -102,62 +109,117 @@ function renderChild({ child, fee, feeMonth, att, attMonth }) {
   }
   card.append(feeBlock);
 
-  // Attendance block
-  const attBlock = el("div", "block");
-  attBlock.append(el("h3", null, `Attendance · ${monthLabel(attMonth)}`));
-  if (att && att.total > 0) {
-    const stats = el("div", "stats");
-    [["Present", att.present], ["Absent", att.absent], ["Leave", att.leave]].forEach(([label, n]) => {
-      const d = el("div");
-      d.append(el("strong", null, String(n)), el("span", null, label));
-      stats.append(d);
-    });
-    attBlock.append(stats);
-    const pct = Math.round((att.present / att.total) * 100);
-    attBlock.append(el("p", "note", `Present on ${att.present} of ${att.total} school days marked (${pct}%).`));
-    const bar = el("div", "bar");
-    bar.setAttribute("role", "img");
-    bar.setAttribute("aria-label", `${pct}% attendance`);
-    const fill = el("div");
-    fill.style.width = pct + "%";
-    bar.append(fill);
-    attBlock.append(bar);
-  } else {
-    attBlock.append(el("p", "note", "No attendance has been recorded for this month yet."));
-  }
-  card.append(attBlock);
   return card;
 }
 
-/* ---------- Lookup ---------- */
-$("lookupForm").addEventListener("submit", async (e) => {
+/* ---------- Sign in and show the family ---------- */
+const SAVED_KEY = "chandParentPhone";
+let busy = false;
+
+function savedPhone() {
+  try { return localStorage.getItem(SAVED_KEY) || sessionStorage.getItem(SAVED_KEY); }
+  catch (e) { return null; }
+}
+function savePhone(id, remember) {
+  try {
+    localStorage.removeItem(SAVED_KEY); sessionStorage.removeItem(SAVED_KEY);
+    (remember ? localStorage : sessionStorage).setItem(SAVED_KEY, id);
+  } catch (e) { /* storage not available: they will just sign in again next time */ }
+}
+function forgetPhone() {
+  try { localStorage.removeItem(SAVED_KEY); sessionStorage.removeItem(SAVED_KEY); } catch (e) { /* ignore */ }
+}
+
+function showSignedIn(signedIn, phoneId) {
+  $("loginForm").hidden = signedIn;
+  $("signedBar").hidden = !signedIn;
+  if (phoneId) $("signedPhone").textContent = "+" + phoneId;
+}
+
+async function isParentUser(user) {
+  const s = await getDoc(doc(db, "users", user.uid));
+  return s.exists() && s.data().role === "parent" && s.data().active !== false;
+}
+
+// Shows the children linked to this phone number. Returns false if there are none.
+async function showFamily(phoneId) {
+  const snap = await getDoc(doc(db, "parentIndex", phoneId));
+  if (!snap.exists() || !Array.isArray(snap.data().children) || snap.data().children.length === 0) return false;
+  const children = [...snap.data().children].sort((a, b) => a.name.localeCompare(b.name));
+  const data = await Promise.all(children.map(loadChild));
+  $("results").innerHTML = "";
+  data.forEach((d) => $("results").append(renderChild(d)));
+  return true;
+}
+
+$("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   $("lookupMsg").hidden = true;
   $("results").innerHTML = "";
 
-  const raw = $("phone").value;
-  if (phoneCandidates(raw).length === 0) return showMsg("Enter the phone number you gave the school.");
+  const candidates = phoneCandidates($("phone").value);
+  const password = $("password").value;
+  if (candidates.length === 0) return showMsg("Enter the phone number you gave the school.");
+  if (!password) return showMsg("Enter the password.");
 
   const btn = $("goBtn");
   btn.disabled = true;
-  btn.textContent = "Looking…";
+  btn.textContent = "Signing in…";
+  busy = true;
   try {
-    const family = await findFamily(raw);
-    if (!family || !Array.isArray(family.children) || family.children.length === 0) {
-      return showMsg("No student found for this number. Please check the number, or contact the school office.");
+    const remember = $("remember").checked;
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+    const cred = await signInWithEmailAndPassword(auth, SHARED_PARENT_EMAIL, password);
+    if (!(await isParentUser(cred.user))) {
+      await signOut(auth);
+      return showMsg("Parent login is not set up yet. Please ask the school office.");
     }
-    const children = [...family.children].sort((a, b) => a.name.localeCompare(b.name));
-    const data = await Promise.all(children.map(loadChild));
-    data.forEach((d) => $("results").append(renderChild(d)));
-    $("results").firstChild.scrollIntoView({ behavior: "smooth", block: "start" });
+    let matched = null;
+    for (const id of candidates) {
+      if (await showFamily(id)) { matched = id; break; }
+    }
+    if (!matched) {
+      await signOut(auth);
+      return showMsg("No student found for this number. Please check it, or contact the school office.");
+    }
+    savePhone(matched, remember);
+    $("password").value = "";
+    showSignedIn(true, matched);
   } catch (err) {
     console.error(err);
-    showMsg(err.code === "permission-denied"
-      ? "This page is not set up yet. Please ask the school office."
-      : "Could not load. Check your internet and try again.");
+    const text = {
+      "auth/invalid-credential": "The password is not correct. Please ask the school office.",
+      "auth/wrong-password": "The password is not correct. Please ask the school office.",
+      "auth/user-not-found": "Parent login is not set up yet. Please ask the school office.",
+      "auth/too-many-requests": "Too many attempts. Please wait a few minutes and try again.",
+      "auth/network-request-failed": "No internet connection. Check your network and try again.",
+      "permission-denied": "This page is not set up yet. Please ask the school office."
+    }[err.code] || "Could not sign in. Please try again.";
+    showMsg(text);
   } finally {
+    busy = false;
     btn.disabled = false;
-    btn.textContent = "View";
+    btn.textContent = "Sign in";
+  }
+});
+
+$("logoutBtn").addEventListener("click", async () => {
+  forgetPhone();
+  await signOut(auth);
+  $("results").innerHTML = "";
+  showSignedIn(false);
+});
+
+// Come back later: if still signed in on this phone, show the family straight away
+onAuthStateChanged(auth, async (user) => {
+  if (!user || busy) return;
+  const saved = savedPhone();
+  if (!saved) return;
+  try {
+    if (!(await isParentUser(user))) return;
+    if (await showFamily(saved)) showSignedIn(true, saved);
+  } catch (err) {
+    console.error(err);
   }
 });
 
