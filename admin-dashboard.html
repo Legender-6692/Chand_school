@@ -109,9 +109,9 @@
       body { grid-template-columns: 1fr; }
       .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 16px; gap: 14px; }
       .side .school { font-size: 1.2rem; }
-      nav { flex-direction: row; order: 3; width: 100%; }
-      nav button { flex: 1; justify-content: center; gap: 8px; }
-      nav a { flex: 1; text-align: center; }
+      nav { flex-direction: row; flex-wrap: wrap; order: 3; width: 100%; }
+      nav button { flex: 1 1 30%; justify-content: center; gap: 8px; }
+      nav a { flex: 1 1 30%; text-align: center; }
       .who { margin: 0 0 0 auto; display: flex; align-items: center; gap: 10px; }
       .who strong { display: none; }
       main { padding: 22px 16px 50px; }
@@ -128,7 +128,8 @@
       <button type="button" data-view="students" aria-current="page">Students <span class="count" id="studentCount">0</span></button>
       <button type="button" data-view="teachers">Teachers <span class="count" id="teacherCount">0</span></button>
       <button type="button" data-view="notices">Notices <span class="count" id="noticeCount">0</span></button>
-      <a href="attendance-fees.html">Attendance &amp; Fees</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="fees.html">Fees</a>
     </nav>
     <div class="who">
       <strong id="adminName">Admin</strong>

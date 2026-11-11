@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fees · Chand School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1d2b4f;
+      --ink-deep: #14203d;
+      --chalk: #f7f6f2;
+      --bus: #f2b705;
+      --slate: #5b6478;
+      --line: #d9dbe2;
+      --error: #b3261e;
+      --error-bg: #fdecea;
+      --ok: #1b6e3c;
+      --ok-bg: #e7f5ec;
+      --warn-bg: #fff6d6;
+      --wa: #1a7f4b;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Mukta", system-ui, sans-serif;
+      font-size: 16.5px;
+      color: var(--ink-deep);
+      background: var(--chalk);
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+    h1, h2, h3 { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.01em; margin: 0; }
+
+    /* Sidebar */
+    .side {
+      background: var(--ink); color: #fff; padding: 28px 20px;
+      display: flex; flex-direction: column; gap: 28px;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .side .school { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .crest { width: 38px; height: 38px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-weight: 700; }
+    nav { display: flex; flex-direction: column; gap: 6px; }
+    nav button, nav a {
+      text-align: left; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500;
+      padding: 11px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; display: block;
+    }
+    nav button:hover, nav a:hover { background: rgba(255,255,255,.08); }
+    nav [aria-current="page"] { background: var(--bus); color: var(--ink-deep); font-weight: 700; }
+    nav [hidden] { display: none; }
+    .who { margin-top: auto; font-size: .93rem; color: #c9d0e4; }
+    .who strong { display: block; color: #fff; margin-bottom: 8px; word-break: break-word; }
+    .who button { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .who button:hover { border-color: #fff; }
+
+    /* Main */
+    main { padding: 34px 40px 60px; max-width: 1150px; width: 100%; }
+    main h1 { font-size: 2rem; margin-bottom: 4px; }
+    .lead { color: var(--slate); margin: 0 0 26px; }
+    section[hidden] { display: none; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-bottom: 28px; }
+    .card[hidden] { display: none; }
+    .card h2 { font-size: 1.25rem; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 20px; }
+    .grid .wide { grid-column: 1 / -1; }
+    label { display: block; font-weight: 700; margin-bottom: 5px; font-size: .97rem; }
+    .hint { font-weight: 400; color: var(--slate); font-size: .88rem; }
+    input, select {
+      width: 100%; padding: 11px 12px; font: inherit; color: inherit;
+      border: 1.5px solid var(--line); border-radius: 8px; background: #fff;
+    }
+    input[type="file"] { padding: 9px; }
+    input:focus, select:focus { border-color: var(--ink); }
+    input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--bus); outline-offset: 2px; }
+    .actions { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .btn { background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer; }
+    .btn:hover { background: var(--ink-deep); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); }
+    .btn.alt:hover { background: #eef0f6; }
+    .btn.small { padding: 7px 12px; font-size: .9rem; }
+    .msg { padding: 10px 14px; border-radius: 8px; font-size: .96rem; line-height: 1.4; }
+    .msg[hidden] { display: none; }
+    .msg.error { background: var(--error-bg); color: var(--error); }
+    .msg.ok { background: var(--ok-bg); color: var(--ok); }
+    .msg.info { background: #eaeefb; color: var(--ink); }
+    .msg.warn { background: var(--warn-bg); color: #6b5200; }
+    .progress { height: 8px; background: #e6e8ef; border-radius: 99px; overflow: hidden; flex: 1; min-width: 160px; }
+    .progress > div { height: 100%; width: 0; background: var(--ink); transition: width .2s; }
+    .progress[hidden] { display: none; }
+    #preview { display: block; max-width: 220px; max-height: 160px; margin-top: 16px; border-radius: 8px; border: 1px solid var(--line); }
+    #preview[hidden] { display: none; }
+    details { margin-top: 14px; color: var(--slate); }
+    details pre { white-space: pre-wrap; background: #f3f3ef; padding: 12px; border-radius: 8px; font-size: .88rem; max-height: 200px; overflow: auto; }
+
+    .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 600px) { .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    /* Tables */
+    .list-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+    .list-head h2 { margin: 0; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filters input { width: 200px; }
+    .filters select { width: 150px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .96rem; }
+    th { text-align: left; font-weight: 700; color: var(--slate); padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:hover { background: #faf9f5; }
+    tr.needs { background: var(--warn-bg); }
+    td select { width: 130px; padding: 7px 8px; }
+    .slipline { color: var(--slate); font-size: .86rem; max-width: 260px; }
+    .empty { color: var(--slate); padding: 18px 4px 4px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: .86rem; font-weight: 700; }
+    .badge.unpaid { background: var(--error-bg); color: var(--error); }
+    .badge.partial { background: var(--warn-bg); color: #6b5200; }
+    .badge.paid { background: var(--ok-bg); color: var(--ok); }
+    .row-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+    a.wa { display: inline-block; text-decoration: none; background: var(--wa); color: #fff; border-radius: 8px; padding: 7px 12px; font-size: .9rem; font-weight: 700; white-space: nowrap; }
+    a.wa:hover { background: #14633b; }
+
+    .summary { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .summary div { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 18px; min-width: 150px; }
+    .summary span { display: block; color: var(--slate); font-size: .88rem; }
+    .summary strong { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.35rem; }
+    .toolbar { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 18px; }
+    .toolbar > div { min-width: 170px; }
+
+    dialog { border: 0; border-radius: 12px; padding: 24px; width: calc(100% - 32px); max-width: 380px; color: var(--ink-deep); }
+    dialog::backdrop { background: rgba(20, 32, 61, .5); }
+    dialog h3 { font-size: 1.2rem; margin-bottom: 6px; }
+    dialog p { margin: 0 0 16px; color: var(--slate); }
+
+    @media (max-width: 860px) {
+      body { grid-template-columns: 1fr; }
+      .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 16px; gap: 14px; }
+      .side .school { font-size: 1.2rem; }
+      nav { flex-direction: row; order: 3; width: 100%; }
+      nav button, nav a { flex: 1; text-align: center; }
+      .who { margin: 0 0 0 auto; display: flex; align-items: center; gap: 10px; }
+      .who strong { display: none; }
+      main { padding: 22px 16px 50px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+
+  <aside class="side">
+    <div class="school"><span class="crest" aria-hidden="true">C</span> Chand School</div>
+    <nav aria-label="Sections">
+      <a href="attendance.html">Attendance</a>
+      <a href="fees.html" aria-current="page">Fees</a>
+      <a href="admin-dashboard.html">Students &amp; teachers</a>
+    </nav>
+    <div class="who">
+      <strong id="userName">Signed in</strong>
+      <button type="button" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- FEES -->
+    <section id="view-fees">
+      <h1>Fees</h1>
+      <p class="lead">Every month starts as Unpaid. Anything left from earlier months is added as arrears.</p>
+
+      <div id="feeNote" class="msg info" role="status" hidden style="margin-bottom:18px"></div>
+
+      <div class="card" style="padding:16px 20px">
+        <div class="actions" style="margin-top:0">
+          <button class="btn alt small" id="portalBtn" type="button">Update parent portal</button>
+          <span class="hint">Run this once now. New students are linked automatically.</span>
+          <div id="portalMsg" class="msg" role="status" hidden></div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div><label for="f_month">Month</label><select id="f_month"></select></div>
+        <div><label for="f_class">Class</label><select id="f_class"></select></div>
+        <div><label for="f_status">Status</label>
+          <select id="f_status">
+            <option value="">All</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="partial">Partly paid</option>
+            <option value="paid">Paid</option>
+          </select>
+        </div>
+        <div><label for="f_search">Search</label><input id="f_search" type="search" placeholder="Name or roll no"></div>
+      </div>
+
+      <div class="summary">
+        <div><span>Total due</span><strong id="sumDue">0</strong></div>
+        <div><span>Collected</span><strong id="sumPaid">0</strong></div>
+        <div><span>Still to collect</span><strong id="sumBal">0</strong></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Class</th><th>Roll</th><th>Student</th>
+              <th class="num">Monthly fee</th><th class="num">Arrears</th><th class="num">Total due</th>
+              <th class="num">Paid</th><th class="num">Balance</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="feeRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="feeEmpty" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="payDialog">
+    <form id="payForm" novalidate>
+      <h3>Record payment</h3>
+      <p id="payWho"></p>
+      <label for="payAmount">Amount received</label>
+      <input id="payAmount" type="number" min="1" step="1" inputmode="numeric" required>
+      <div id="payMsg" class="msg error" role="alert" hidden style="margin-top:12px"></div>
+      <div class="actions">
+        <button class="btn" id="paySave" type="submit">Save payment</button>
+        <button class="btn alt" id="payCancel" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="fees.js"></script>
+</body>
+</html>
