@@ -70,10 +70,10 @@ async function loadChild(child) {
 }
 
 /* ---------- Rendering ---------- */
-function row(dl, label, value, cls) {
-  const dt = el("dt", cls, label);
-  const dd = el("dd", cls, value);
-  dl.append(dt, dd);
+function row(list, label, value, cls) {
+  const r = el("div", "fee-row" + (cls ? " " + cls : ""));
+  r.append(el("span", "lbl", label), el("span", "val", value));
+  list.append(r);
 }
 
 function renderChild({ child, fee, feeMonth }) {
@@ -90,7 +90,7 @@ function renderChild({ child, fee, feeMonth }) {
     const badge = el("span", "badge " + status, { paid: "Paid", partial: "Partly paid", unpaid: "Unpaid" }[status]);
     h.append(badge);
     feeBlock.append(h);
-    const dl = el("dl");
+    const dl = el("div", "fee-list");
     row(dl, "Month", monthLabel(feeMonth));
     row(dl, "Monthly fee", money(fee.monthlyFee));
     row(dl, "Arrears (earlier unpaid)", fee.arrears > 0 ? money(fee.arrears) : "None");
@@ -113,10 +113,29 @@ function renderChild({ child, fee, feeMonth }) {
 /* ---------- Sign in and show the family ---------- */
 let busy = false;
 
+function showView(v) {
+  document.querySelectorAll("#tabs button").forEach((b) => {
+    if (b.dataset.view === v) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
+  $("view-fees").hidden = v !== "fees";
+  $("view-notices").hidden = v !== "notices";
+}
+document.querySelectorAll("#tabs button").forEach((b) => {
+  b.addEventListener("click", () => showView(b.dataset.view));
+});
+
 function showSignedIn(signedIn, phoneId) {
   $("loginForm").hidden = signedIn;
-  $("signedBar").hidden = !signedIn;
-  if (phoneId) $("signedPhone").textContent = "+" + phoneId;
+  $("tabs").hidden = !signedIn;
+  $("logoutBtn").hidden = !signedIn;
+  $("headSub").textContent = signedIn && phoneId ? "Parent · +" + phoneId : "Parent corner";
+  if (signedIn) {
+    showView("fees");
+  } else {
+    $("view-fees").hidden = true;
+    $("view-notices").hidden = true;
+  }
 }
 
 // Shows the children linked to this phone number. Returns false if there are none.

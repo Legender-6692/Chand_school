@@ -32,14 +32,24 @@
     }
     h1, h2, h3 { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.01em; margin: 0; }
 
-    header {
-      background: var(--ink); color: #fff; padding: 22px 20px 26px; position: relative;
-    }
+    header { background: var(--ink); color: #fff; padding: 16px 20px 0; position: relative; }
     header::after {
-      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px;
+      content: ""; display: block; height: 8px; margin: 14px -20px 0;
       background: repeating-linear-gradient(90deg, var(--bus) 0 28px, var(--ink) 28px 40px);
     }
     .head-in { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+    .head-in .grow { flex: 1; min-width: 0; }
+    .head-in p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .signout { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .signout:hover { border-color: #fff; }
+    .signout[hidden] { display: none; }
+    nav#tabs { max-width: 720px; margin: 14px auto 0; display: flex; gap: 4px; }
+    nav#tabs[hidden] { display: none; }
+    nav#tabs button { flex: 1; min-width: 0; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500; padding: 11px 6px; text-align: center; border-radius: 8px 8px 0 0; cursor: pointer; }
+    nav#tabs button:hover { background: rgba(255,255,255,.08); }
+    nav#tabs button[aria-current="page"] { background: var(--chalk); color: var(--ink-deep); font-weight: 700; }
+    nav#tabs button:focus-visible { outline: 3px solid var(--bus); outline-offset: -3px; }
+    section[hidden] { display: none; }
     .crest { width: 44px; height: 44px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.3rem; flex: none; }
     header h1 { font-size: 1.5rem; }
     header p { margin: 2px 0 0; color: #c9d0e4; font-size: .95rem; }
@@ -87,10 +97,12 @@
     .badge.unpaid { background: var(--error-bg); color: var(--error); }
     .badge.partial { background: var(--warn-bg); color: #6b5200; }
     .badge.paid { background: var(--ok-bg); color: var(--ok); }
-    dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; }
-    dt { color: var(--slate); }
-    dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
-    dl .total { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 700; color: var(--ink-deep); }
+    .fee-list { display: block; }
+    .fee-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 7px 0; }
+    .fee-row .lbl { color: var(--slate); }
+    .fee-row .val { font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; }
+    .fee-row.total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 12px; }
+    .fee-row.total .lbl, .fee-row.total .val { color: var(--ink-deep); font-weight: 700; }
     .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
     .stats div { background: var(--chalk); border-radius: 10px; padding: 10px 12px; text-align: center; }
     .stats strong { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.5rem; }
@@ -118,11 +130,16 @@
   <header>
     <div class="head-in">
       <div class="crest" aria-hidden="true">C</div>
-      <div>
+      <div class="grow">
         <h1>Chand School</h1>
-        <p>Parent corner</p>
+        <p id="headSub">Parent corner</p>
       </div>
+      <button class="signout" id="logoutBtn" type="button" hidden>Sign out</button>
     </div>
+    <nav id="tabs" aria-label="Sections" hidden>
+      <button type="button" data-view="fees" aria-current="page">Fees</button>
+      <button type="button" data-view="notices">Notices</button>
+    </nav>
   </header>
 
   <main>
@@ -143,19 +160,18 @@
       <div id="lookupMsg" class="msg" role="alert" hidden></div>
     </form>
 
-    <div class="bar-row" id="signedBar" hidden>
-      <span>Signed in as <strong id="signedPhone"></strong></span>
-      <button class="btn alt" id="logoutBtn" type="button">Sign out</button>
-    </div>
+    <section id="view-fees" hidden>
+      <div id="results"></div>
+    </section>
 
-    <div id="results"></div>
-
-    <section class="card" aria-labelledby="noticeTitle">
-      <h2 id="noticeTitle">School notices</h2>
-      <div id="notices"><p class="empty">Loading…</p></div>
+    <section id="view-notices" hidden>
+      <div class="card">
+        <h2 id="noticeTitle">School notices</h2>
+        <div id="notices"><p class="empty">Loading…</p></div>
+      </div>
     </section>
   </main>
 
-  <script type="module" src="parent-dashboard.js"></script>
+  <script type="module" src="parent-dashboard.js?v=20261112b"></script>
 </body>
 </html>
