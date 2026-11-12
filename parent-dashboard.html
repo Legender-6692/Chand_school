@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Parent Corner · Chand School</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Parent Corner · Chand Public High School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #1d2b4f;
-      --ink-deep: #14203d;
-      --chalk: #f7f6f2;
-      --bus: #f2b705;
-      --slate: #5b6478;
-      --line: #d9dbe2;
+      --ink: #1a7a30;
+      --ink-deep: #0f3a1c;
+      --chalk: #f3f8ef;
+      --bus: #8ad63f;
+      --slate: #55695a;
+      --line: #d3e0cd;
       --error: #b3261e;
       --error-bg: #fdecea;
       --ok: #1b6e3c;
@@ -40,19 +41,19 @@
     .head-in { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
     .head-in .grow { flex: 1; min-width: 0; }
     .head-in p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .signout { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .signout { background: none; border: 1.5px solid #5fae71; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
     .signout:hover { border-color: #fff; }
     .signout[hidden] { display: none; }
     nav#tabs { max-width: 720px; margin: 14px auto 0; display: flex; gap: 4px; }
     nav#tabs[hidden] { display: none; }
-    nav#tabs button { flex: 1; min-width: 0; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500; padding: 11px 6px; text-align: center; border-radius: 8px 8px 0 0; cursor: pointer; }
+    nav#tabs button { flex: 1; min-width: 0; background: none; border: 0; color: #d4ecd7; font: inherit; font-weight: 500; padding: 11px 6px; text-align: center; border-radius: 8px 8px 0 0; cursor: pointer; }
     nav#tabs button:hover { background: rgba(255,255,255,.08); }
     nav#tabs button[aria-current="page"] { background: var(--chalk); color: var(--ink-deep); font-weight: 700; }
     nav#tabs button:focus-visible { outline: 3px solid var(--bus); outline-offset: -3px; }
     section[hidden] { display: none; }
-    .crest { width: 44px; height: 44px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.3rem; flex: none; }
-    header h1 { font-size: 1.5rem; }
-    header p { margin: 2px 0 0; color: #c9d0e4; font-size: .95rem; }
+    .crest { width: 44px; height: 44px; border-radius: 50%; background: #fff; object-fit: cover; flex: none; display: block; }
+    header h1 { font-size: 1.15rem; line-height: 1.15; }
+    header p { margin: 2px 0 0; color: #d4ecd7; font-size: .95rem; }
 
     main { max-width: 720px; margin: 0 auto; padding: 26px 18px 60px; }
     .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 22px; margin-bottom: 22px; }
@@ -74,7 +75,7 @@
     .msg { padding: 11px 14px; border-radius: 8px; margin-top: 14px; font-size: .97rem; line-height: 1.4; }
     .msg[hidden] { display: none; }
     .msg.error { background: var(--error-bg); color: var(--error); }
-    .msg.info { background: #eaeefb; color: var(--ink); }
+    .msg.info { background: #e1f2e3; color: var(--ink); }
 
     .field { margin-bottom: 16px; }
     .field input { width: 100%; }
@@ -83,7 +84,7 @@
     .check input { flex: none; width: 18px; height: 18px; accent-color: var(--ink); }
     .btn.full { width: 100%; }
     .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); padding: 8px 16px; }
-    .btn.alt:hover { background: #eef0f6; }
+    .btn.alt:hover { background: #e8f3e5; }
     .bar-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
     .bar-row[hidden] { display: none; }
     form[hidden] { display: none; }
@@ -107,7 +108,7 @@
     .stats div { background: var(--chalk); border-radius: 10px; padding: 10px 12px; text-align: center; }
     .stats strong { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.5rem; }
     .stats span { color: var(--slate); font-size: .88rem; }
-    .bar { height: 10px; background: #e6e8ef; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .bar { height: 10px; background: #dcead8; border-radius: 99px; overflow: hidden; margin-top: 8px; }
     .bar > div { height: 100%; background: var(--ok); }
     .note { color: var(--slate); font-size: .93rem; margin: 0; }
 
@@ -129,9 +130,9 @@
 
   <header>
     <div class="head-in">
-      <div class="crest" aria-hidden="true">C</div>
+      <img class="crest" src="logo.png" alt="Chand Public High School logo">
       <div class="grow">
-        <h1>Chand School</h1>
+        <h1>Chand Public High School</h1>
         <p id="headSub">Parent corner</p>
       </div>
       <button class="signout" id="logoutBtn" type="button" hidden>Sign out</button>
@@ -172,6 +173,6 @@
     </section>
   </main>
 
-  <script type="module" src="parent-dashboard.js?v=20261112b"></script>
+  <script type="module" src="parent-dashboard.js?v=20261112c"></script>
 </body>
 </html>

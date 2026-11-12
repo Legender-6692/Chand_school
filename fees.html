@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fees · Chand School</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Fees · Chand Public High School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #1d2b4f;
-      --ink-deep: #14203d;
-      --chalk: #f7f6f2;
-      --bus: #f2b705;
-      --slate: #5b6478;
-      --line: #d9dbe2;
+      --ink: #1a7a30;
+      --ink-deep: #0f3a1c;
+      --chalk: #f3f8ef;
+      --bus: #8ad63f;
+      --slate: #55695a;
+      --line: #d3e0cd;
       --error: #b3261e;
       --error-bg: #fdecea;
       --ok: #1b6e3c;
@@ -41,19 +42,19 @@
       display: flex; flex-direction: column; gap: 28px;
       position: sticky; top: 0; height: 100vh;
     }
-    .side .school { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
-    .crest { width: 38px; height: 38px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-weight: 700; }
+    .side .school { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.12rem; line-height: 1.15; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .crest { width: 44px; height: 44px; border-radius: 50%; background: #fff; object-fit: cover; flex: none; display: block; }
     nav { display: flex; flex-direction: column; gap: 6px; }
     nav button, nav a {
-      text-align: left; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500;
+      text-align: left; background: none; border: 0; color: #d4ecd7; font: inherit; font-weight: 500;
       padding: 11px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; display: block;
     }
     nav button:hover, nav a:hover { background: rgba(255,255,255,.08); }
     nav [aria-current="page"] { background: var(--bus); color: var(--ink-deep); font-weight: 700; }
     nav [hidden] { display: none; }
-    .who { margin-top: auto; font-size: .93rem; color: #c9d0e4; }
+    .who { margin-top: auto; font-size: .93rem; color: #d4ecd7; }
     .who strong { display: block; color: #fff; margin-bottom: 8px; word-break: break-word; }
-    .who button { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .who button { background: none; border: 1.5px solid #5fae71; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
     .who button:hover { border-color: #fff; }
 
     /* Main */
@@ -80,15 +81,15 @@
     .btn:hover { background: var(--ink-deep); }
     .btn:disabled { opacity: .55; cursor: not-allowed; }
     .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); }
-    .btn.alt:hover { background: #eef0f6; }
+    .btn.alt:hover { background: #e8f3e5; }
     .btn.small { padding: 7px 12px; font-size: .9rem; }
     .msg { padding: 10px 14px; border-radius: 8px; font-size: .96rem; line-height: 1.4; }
     .msg[hidden] { display: none; }
     .msg.error { background: var(--error-bg); color: var(--error); }
     .msg.ok { background: var(--ok-bg); color: var(--ok); }
-    .msg.info { background: #eaeefb; color: var(--ink); }
+    .msg.info { background: #e1f2e3; color: var(--ink); }
     .msg.warn { background: var(--warn-bg); color: #6b5200; }
-    .progress { height: 8px; background: #e6e8ef; border-radius: 99px; overflow: hidden; flex: 1; min-width: 160px; }
+    .progress { height: 8px; background: #dcead8; border-radius: 99px; overflow: hidden; flex: 1; min-width: 160px; }
     .progress > div { height: 100%; width: 0; background: var(--ink); transition: width .2s; }
     .progress[hidden] { display: none; }
     #preview { display: block; max-width: 220px; max-height: 160px; margin-top: 16px; border-radius: 8px; border: 1px solid var(--line); }
@@ -138,7 +139,7 @@
     @media (max-width: 860px) {
       body { grid-template-columns: 1fr; }
       .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 16px; gap: 14px; }
-      .side .school { font-size: 1.2rem; }
+      .side .school { font-size: 1rem; }
       nav { flex-direction: row; order: 3; width: 100%; }
       nav button, nav a { flex: 1; text-align: center; }
       .who { margin: 0 0 0 auto; display: flex; align-items: center; gap: 10px; }
@@ -152,7 +153,7 @@
 <body>
 
   <aside class="side">
-    <div class="school"><span class="crest" aria-hidden="true">C</span> Chand School</div>
+    <div class="school"><img class="crest" src="logo.png" alt="Chand Public High School logo"> <span>Chand Public High School</span></div>
     <nav aria-label="Sections">
       <a href="attendance.html">Attendance</a>
       <a href="fees.html" aria-current="page">Fees</a>
@@ -230,6 +231,6 @@
     </form>
   </dialog>
 
-  <script type="module" src="fees.js"></script>
+  <script type="module" src="fees.js?v=20261112c"></script>
 </body>
 </html>

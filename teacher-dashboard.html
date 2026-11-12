@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Teacher · Chand School</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Teacher · Chand Public High School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #1d2b4f; --ink-deep: #14203d; --chalk: #f7f6f2; --bus: #f2b705;
-      --slate: #5b6478; --line: #d9dbe2; --error: #b3261e; --error-bg: #fdecea;
+      --ink: #1a7a30; --ink-deep: #0f3a1c; --chalk: #f3f8ef; --bus: #8ad63f;
+      --slate: #55695a; --line: #d3e0cd; --error: #b3261e; --error-bg: #fdecea;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
@@ -21,14 +22,14 @@
     header::after { content: ""; display: block; height: 8px; margin: 14px -20px 0;
       background: repeating-linear-gradient(90deg, var(--bus) 0 28px, var(--ink) 28px 40px); }
     .top { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
-    .crest { width: 38px; height: 38px; border-radius: 50%; background: var(--bus); color: var(--ink-deep); display: grid; place-items: center; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; flex: none; }
+    .crest { width: 44px; height: 44px; border-radius: 50%; background: #fff; object-fit: cover; flex: none; display: block; }
     .top .name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.2rem; line-height: 1.1; }
-    .top .who { color: #c9d0e4; font-size: .9rem; }
+    .top .who { color: #d4ecd7; font-size: .9rem; }
     .top .grow { flex: 1; min-width: 0; }
-    .signout { background: none; border: 1.5px solid #5d6b92; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    .signout { background: none; border: 1.5px solid #5fae71; color: #fff; font: inherit; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
     .signout:hover { border-color: #fff; }
     nav { max-width: 900px; margin: 14px auto 0; display: flex; gap: 4px; }
-    nav button { flex: 1; min-width: 0; background: none; border: 0; color: #c9d0e4; font: inherit; font-weight: 500; padding: 11px 6px; text-align: center; border-radius: 8px 8px 0 0; cursor: pointer; }
+    nav button { flex: 1; min-width: 0; background: none; border: 0; color: #d4ecd7; font: inherit; font-weight: 500; padding: 11px 6px; text-align: center; border-radius: 8px 8px 0 0; cursor: pointer; }
     nav button[aria-current="page"] { background: var(--chalk); color: var(--ink-deep); font-weight: 700; }
 
     main { max-width: 900px; margin: 0 auto; padding: 26px 18px 60px; }
@@ -47,7 +48,7 @@
     td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
     td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     .empty { color: var(--slate); margin: 8px 0 0; }
-    .msg { padding: 10px 14px; border-radius: 8px; background: #eaeefb; color: var(--ink); margin-bottom: 14px; }
+    .msg { padding: 10px 14px; border-radius: 8px; background: #e1f2e3; color: var(--ink); margin-bottom: 14px; }
     .msg[hidden] { display: none; }
     .notice { border-top: 1px solid var(--line); padding: 14px 0; }
     .notice:first-of-type { border-top: 0; padding-top: 4px; }
@@ -78,9 +79,9 @@
 
   <header>
     <div class="top">
-      <div class="crest" aria-hidden="true">C</div>
+      <img class="crest" src="logo.png" alt="Chand Public High School logo">
       <div class="grow">
-        <div class="name">Chand School</div>
+        <div class="name">Chand Public High School</div>
         <div class="who" id="userName">Teacher</div>
       </div>
       <button class="signout" id="logoutBtn" type="button">Sign out</button>
@@ -134,6 +135,6 @@
     </section>
   </main>
 
-  <script type="module" src="teacher-dashboard.js"></script>
+  <script type="module" src="teacher-dashboard.js?v=20261112c"></script>
 </body>
 </html>

@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · Chand School</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Sign in · Chand Public High School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Mukta:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #1d2b4f;
-      --ink-deep: #14203d;
-      --chalk: #f7f6f2;
-      --bus: #f2b705;
-      --slate: #5b6478;
-      --line: #d9dbe2;
+      --ink: #1a7a30;
+      --ink-deep: #0f3a1c;
+      --chalk: #f3f8ef;
+      --bus: #8ad63f;
+      --slate: #55695a;
+      --line: #d3e0cd;
       --error: #b3261e;
       --error-bg: #fdecea;
       --ok: #1b6e3c;
@@ -52,19 +53,15 @@
     .brand h1 {
       font-family: "Bricolage Grotesque", sans-serif;
       font-weight: 700;
-      font-size: clamp(2.6rem, 5vw, 4.2rem);
+      font-size: clamp(2rem, 3.6vw, 3.1rem);
       line-height: 1.02;
       margin: 0 0 18px;
       letter-spacing: -0.02em;
     }
-    .brand p { margin: 0; max-width: 30ch; color: #c9d0e4; line-height: 1.5; }
-    .brand .crest {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: var(--bus); color: var(--ink-deep);
-      display: grid; place-items: center;
-      font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.5rem;
-    }
-    .brand .foot { font-size: 0.9rem; color: #9aa5c4; margin-bottom: 14px; }
+    .brand p { margin: 0; max-width: 30ch; color: #d4ecd7; line-height: 1.5; }
+    .brand-logo { width: 132px; height: 132px; border-radius: 50%; background: #fff; object-fit: cover; box-shadow: 0 0 0 5px rgba(255,255,255,.22); }
+    .brand .tag { color: var(--bus); font-weight: 700; margin-bottom: 8px; }
+    .brand .foot { font-size: 0.9rem; color: #a8d1ad; margin-bottom: 14px; }
 
     /* Right: form */
     main { display: grid; place-items: center; padding: 32px 24px; }
@@ -118,7 +115,8 @@
     @media (max-width: 760px) {
       body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .brand { padding: 28px 24px 34px; gap: 24px; }
-      .brand h1 { font-size: 2.2rem; margin-bottom: 8px; }
+      .brand h1 { font-size: 1.7rem; margin-bottom: 6px; }
+      .brand-logo { width: 84px; height: 84px; }
       .brand .foot { display: none; }
     }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -127,14 +125,13 @@
 <body>
 
   <aside class="brand">
+    <img class="brand-logo" src="logo.png" alt="Chand Public High School logo">
     <div>
-      <div class="crest" aria-hidden="true">C</div>
+      <h1>Chand Public High School</h1>
+      <p class="tag">Learn · Grow · Succeed</p>
+      <p>Students, fees, attendance and notices in one place.</p>
     </div>
-    <div>
-      <h1>Chand School</h1>
-      <p>Students, fees, attendance and results in one place.</p>
-    </div>
-    <div class="foot">School Management System</div>
+    <div class="foot">Main Bazar, Rehman Pura, Sheikhupura</div>
   </aside>
 
   <main>

@@ -647,7 +647,7 @@ function loginMessage(phone, password) {
   return [
     "Dear Parent,",
     "",
-    "Chand School parent login:",
+    "Chand Public High School parent login:",
     `Username: +${phone}`,
     `Password: ${password}`,
     `Login page: ${link}`,

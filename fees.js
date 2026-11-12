@@ -7,7 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 /* ================= Settings you can change ================= */
-const SCHOOL_NAME = "Chand School";
+const SCHOOL_NAME = "Chand Public High School";
 const CURRENCY = "Rs.";
 const CLASSES = [
   "Playgroup", "Nursery", "LKG", "UKG",
