@@ -46,7 +46,7 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     const data = snap.exists() ? snap.data() : null;
-    if (!data || data.active === false || !["teacher", "admin"].includes(data.role)) {
+    if (!data || data.active === false || !["teacher", "admin", "subadmin"].includes(data.role)) {
       await signOut(auth);
       location.replace("index.html");
       return;

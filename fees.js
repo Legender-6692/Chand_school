@@ -97,7 +97,7 @@ onAuthStateChanged(auth, async (user) => {
       location.replace("attendance.html"); // coordinators only do attendance
       return;
     }
-    if (!data || data.active === false || data.role !== "admin") {
+    if (!data || data.active === false || !["admin", "subadmin"].includes(data.role)) {
       await signOut(auth);
       location.replace("index.html");
       return;

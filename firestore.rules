@@ -8,26 +8,41 @@ service cloud.firestore {
     function myRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
-    function isAdmin() {
+    // The main admin only (can add and remove sub-admins)
+    function isOwner() {
       return signedIn() && myRole() == 'admin';
     }
-    function isStaff() {
-      return signedIn() && myRole() in ['admin', 'teacher', 'coordinator'];
+    // The main admin and sub-admins: the same powers on everything else
+    function isAdmin() {
+      return signedIn() && myRole() in ['admin', 'subadmin'];
     }
-    function isParent() {
-      return signedIn() && myRole() == 'parent';
+    function isStaff() {
+      return signedIn() && myRole() in ['admin', 'subadmin', 'teacher', 'coordinator'];
+    }
+    // Parent logins are <phone>@parents.chandschool.app
+    function isParentOf(phone) {
+      return signedIn() && request.auth.token.email == phone + '@parents.chandschool.app';
     }
     function isTeacher() {
       return signedIn() && myRole() == 'teacher';
     }
     function canMarkAttendance() {
-      return signedIn() && myRole() in ['admin', 'coordinator'];
+      return signedIn() && myRole() in ['admin', 'subadmin', 'coordinator'];
     }
 
-    // Login info: each person can read their own record, only admin can change it
+    // Login info: each person can read their own record.
+    // Only the main admin can create or change admin-level users (sub-admins).
+    // A sub-admin may only create, rename or remove teacher users.
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow write: if isAdmin();
+      allow create: if isOwner() || (isAdmin() && request.resource.data.role == 'teacher');
+      allow update: if isOwner() || (isAdmin() && resource.data.role == 'teacher' && request.resource.data.role == 'teacher');
+      allow delete: if isOwner() || (isAdmin() && resource.data.role == 'teacher');
+    }
+
+    // Sub-admin list: main admin only
+    match /subadmins/{id} {
+      allow read, write: if isOwner();
     }
 
     // Students: staff can see, only admin can add or change
@@ -42,25 +57,30 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Attendance: staff can see, admin and coordinator can save
+    // Attendance: only admin and coordinator
     match /attendance/{id} {
-      allow read: if isStaff();
-      allow write: if canMarkAttendance();
+      allow read, write: if canMarkAttendance();
     }
 
     // ---- Parent corner ----
-    // Parents sign in (one shared parent account). They can open ONE record by its exact id.
+    // Each parent signs in with their own phone number and can only open their own family's records.
     // Nobody can list or browse these collections except staff.
 
     // phone number -> the children linked to it
     match /parentIndex/{phone} {
-      allow get: if isAdmin() || isParent();
+      allow get: if isAdmin() || isParentOf(phone);
       allow list, write: if isAdmin();
+    }
+
+    // Parent passwords: admin only
+    match /parentLogins/{phone} {
+      allow read, write: if isAdmin();
     }
 
     // Monthly fee records and payments
     match /fees/{id} {
-      allow get: if isAdmin() || isTeacher() || isParent();
+      allow get: if isAdmin() || isTeacher()
+        || (signedIn() && request.auth.token.email == resource.data.parentPhone + '@parents.chandschool.app');
       allow list: if isAdmin() || isTeacher();
       allow write: if isAdmin();
     }

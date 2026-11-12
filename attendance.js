@@ -93,7 +93,7 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     const data = snap.exists() ? snap.data() : null;
-    if (!data || data.active === false || !["admin", "coordinator"].includes(data.role)) {
+    if (!data || data.active === false || !["admin", "subadmin", "coordinator"].includes(data.role)) {
       await signOut(auth);
       location.replace("index.html");
       return;
@@ -119,7 +119,7 @@ $("logoutBtn").addEventListener("click", async () => {
 
 function startApp() {
   // Admin also gets links to the other pages
-  if (role === "admin") {
+  if (role === "admin" || role === "subadmin") {
     $("navFees").hidden = false;
     $("navAdmin").hidden = false;
   }

@@ -132,6 +132,7 @@
       <button type="button" data-view="students" aria-current="page">Students <span class="count" id="studentCount">0</span></button>
       <button type="button" data-view="teachers">Teachers <span class="count" id="teacherCount">0</span></button>
       <button type="button" data-view="notices">Notices <span class="count" id="noticeCount">0</span></button>
+      <button type="button" data-view="subadmins" id="navSubadmins" hidden>Sub-admins <span class="count" id="subadminCount">0</span></button>
       <button type="button" data-view="parents">Parents <span class="count" id="parentCount">0</span></button>
       <a href="attendance.html">Attendance</a>
       <a href="fees.html">Fees</a>
@@ -327,8 +328,47 @@
         <p class="empty" id="p_empty" hidden></p>
       </div>
     </section>
+
+    <!-- SUB-ADMINS (main admin only) -->
+    <section id="view-subadmins" hidden>
+      <h1>Sub-admins</h1>
+      <p class="lead">A sub-admin can see and change everything you can, except this Sub-admins section.</p>
+
+      <form class="card" id="subForm" novalidate>
+        <h2>Add sub-admin</h2>
+        <div class="grid">
+          <div class="wide">
+            <label for="sa_name">Name</label>
+            <input id="sa_name" type="text" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="sa_email">Login email</label>
+            <input id="sa_email" type="email" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="sa_pass">Login password <span class="hint">(at least 6 characters)</span></label>
+            <input id="sa_pass" type="text" autocomplete="off" required>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="saBtn" type="submit">Add sub-admin</button>
+          <div id="saMsg" class="msg" role="status" hidden></div>
+        </div>
+      </form>
+
+      <div class="card">
+        <div class="list-head"><h2>All sub-admins</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
+            <tbody id="saRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="saEmpty" hidden></p>
+      </div>
+    </section>
   </main>
 
-  <script type="module" src="admin.js?v=20261112c"></script>
+  <script type="module" src="admin.js?v=20261112d"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ import { app, auth, db } from "./firebase-config.js";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signOut,
-  createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, updatePassword
+  createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, updatePassword, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
   doc, getDoc, collection, addDoc, query, where, limit, getDocs,
@@ -77,12 +77,13 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     const data = snap.exists() ? snap.data() : null;
-    if (!data || data.role !== "admin" || data.active === false) {
+    if (!data || !["admin", "subadmin"].includes(data.role) || data.active === false) {
       await signOut(auth);
       location.replace("index.html");
       return;
     }
-    $("adminName").textContent = data.name || user.email;
+    isOwnerUser = data.role === "admin";
+    $("adminName").textContent = (data.name || user.email) + (isOwnerUser ? "" : " · Sub-admin");
     if (!started) {
       started = true;
       try { startApp(); }
@@ -104,7 +105,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("nav button").forEach((b) => b.removeAttribute("aria-current"));
     btn.setAttribute("aria-current", "page");
-    ["students", "teachers", "notices", "parents"].forEach((v) => {
+    ["students", "teachers", "notices", "parents", "subadmins"].forEach((v) => {
       $("view-" + v).hidden = btn.dataset.view !== v;
     });
   });
@@ -124,6 +125,7 @@ function startApp() {
   $("teacherForm").addEventListener("submit", saveTeacher);
   $("s_search").addEventListener("input", renderStudents);
   $("s_filter").addEventListener("change", renderStudents);
+  if (isOwnerUser) startSubadmins();   // only the main admin manages sub-admins
 }
 
 /* ---------- Students ---------- */
@@ -830,4 +832,119 @@ async function createMissingLogins() {
   }
   btn.disabled = false;
   showMsg(msg, `Done. ${done} created${failed ? `, ${failed} failed. Use Create login on those rows to see why.` : "."}`, failed ? "warn" : "ok");
+}
+
+
+/* ---------- Sub-admins (only the main admin sees this) ---------- */
+let isOwnerUser = false;
+
+function startSubadmins() {
+  $("navSubadmins").hidden = false;
+  $("subForm").addEventListener("submit", addSubadmin);
+  onSnapshot(collection(db, "subadmins"), (snap) => {
+    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    $("subadminCount").textContent = rows.length;
+    const body = $("saRows");
+    body.innerHTML = "";
+    rows.forEach((u) => {
+      const tr = document.createElement("tr");
+      tr.append(cell(u.name || ""), cell(u.email || ""));
+
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.className = "btn alt small";
+      reset.textContent = "Send password reset email";
+      reset.addEventListener("click", async () => {
+        reset.disabled = true;
+        try {
+          await sendPasswordResetEmail(auth, u.email);
+          showMsg($("saMsg"), `A password reset email was sent to ${u.email}.`, "ok");
+        } catch (err) {
+          console.error(err);
+          showMsg($("saMsg"), "Could not send the email. Check your internet and try again.");
+        } finally { reset.disabled = false; }
+      });
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn alt small";
+      del.textContent = "Delete";
+      del.addEventListener("click", () => deleteSubadmin(u));
+      wrap.append(reset, del);
+      const td = document.createElement("td");
+      td.appendChild(wrap);
+      tr.appendChild(td);
+      body.appendChild(tr);
+    });
+    $("saEmpty").textContent = "No sub-admins yet. Add the first one using the form above.";
+    $("saEmpty").hidden = rows.length > 0;
+  }, (err) => {
+    console.error(err);
+    $("saEmpty").textContent = "Could not load sub-admins. Check the Firestore rules.";
+    $("saEmpty").hidden = false;
+  });
+}
+
+async function addSubadmin(e) {
+  e.preventDefault();
+  const msg = $("saMsg");
+  hideMsg(msg);
+  const name = $("sa_name").value.trim();
+  const email = $("sa_email").value.trim().toLowerCase();
+  const password = $("sa_pass").value;
+  if (!name) return showMsg(msg, "Enter the sub-admin's name.");
+  if (!email) return showMsg(msg, "Enter the login email.");
+  if (password.length < 6) return showMsg(msg, "The password needs at least 6 characters.");
+
+  const btn = $("saBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+  // A second Firebase app creates the login, so the main admin stays signed in
+  const secApp = initializeApp(app.options, "subadmin-" + Date.now());
+  const secAuth = getAuth(secApp);
+  let newUser = null;
+  try {
+    const cred = await createUserWithEmailAndPassword(secAuth, email, password);
+    newUser = cred.user;
+    const batch = writeBatch(db);
+    batch.set(doc(db, "users", newUser.uid), { name, email, role: "subadmin", active: true });
+    batch.set(doc(db, "subadmins", newUser.uid), { name, email, uid: newUser.uid, createdAt: serverTimestamp() });
+    await batch.commit();
+    $("subForm").reset();
+    showMsg(msg, `${name} added. They can sign in with ${email}.`, "ok");
+  } catch (err) {
+    console.error(err);
+    if (newUser) { try { await deleteUser(newUser); } catch (_) { /* ignore */ } }
+    showMsg(msg, {
+      "auth/email-already-in-use": "This email already has an account. Use a different email.",
+      "auth/invalid-email": "That email address doesn't look right.",
+      "auth/weak-password": "The password is too weak. Use at least 6 characters.",
+      "auth/operation-not-allowed": "Email/Password sign-in is turned off in Firebase Authentication.",
+      "permission-denied": "Not allowed. Check the Firestore rules (see firestore.rules)."
+    }[err.code] || "Could not save. Check your internet and try again.");
+  } finally {
+    try { await signOut(secAuth); } catch (_) { /* ignore */ }
+    try { await deleteApp(secApp); } catch (_) { /* ignore */ }
+    btn.disabled = false;
+    btn.textContent = "Add sub-admin";
+  }
+}
+
+// Removes the sub-admin's access. The sign-in account itself stays in Firebase Authentication.
+async function deleteSubadmin(u) {
+  if (!confirm(`Delete ${u.name}?\n\nThey will no longer be able to use the app. This cannot be undone.`)) return;
+  try {
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "subadmins", u.id));
+    batch.delete(doc(db, "users", u.id));
+    await batch.commit();
+    showMsg($("saMsg"), `${u.name} removed. To add this email again later, first delete it in Firebase > Authentication > Users.`, "ok");
+  } catch (err) {
+    console.error(err);
+    showMsg($("saMsg"), err.code === "permission-denied"
+      ? "Not allowed. Check the Firestore rules (see firestore.rules)."
+      : "Could not delete. Check your internet and try again.");
+  }
 }
