@@ -113,10 +113,14 @@
     .help { margin-top: 26px; color: var(--slate); font-size: 0.95rem; }
 
     @media (max-width: 760px) {
-      body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-      .brand { padding: 28px 24px 34px; gap: 24px; }
-      .brand h1 { font-size: 1.7rem; margin-bottom: 6px; }
-      .brand-logo { width: 84px; height: 84px; }
+      /* The page grows with its content, so the logo panel is never squeezed */
+      html, body { height: auto; min-height: 100%; }
+      body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+      .brand { flex: none; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px; padding: 22px 20px 30px; overflow: visible; }
+      .brand-logo { flex: none; width: 88px; height: 88px; }
+      .brand h1 { font-size: 1.35rem; line-height: 1.15; margin-bottom: 4px; letter-spacing: -0.01em; }
+      .brand .tag { margin-bottom: 0; font-size: .95rem; }
+      .brand p:not(.tag) { display: none; }
       .brand .foot { display: none; }
     }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
